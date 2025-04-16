@@ -8,19 +8,39 @@ const tintColorDark = '#fff';
 
 export const Colors = {
   light: {
-    text: '#11181C',
     background: '#fff',
-    tint: tintColorLight,
+    card: '#fff',
+    text: '#11181C',
+    secondaryText: '#687076',
+    title: '#D32F2F',
+    button: '#D32F2F',
+    buttonText: '#fff',
+    border: '#E0E0E0',
+    error: '#B71C1C',
     icon: '#687076',
     tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    tabIconSelected: '#D32F2F',
+    inputBackground: '#f7f7f7',
+    primary: '#D32F2F', // Rouge pompier
+    accent: '#FFD600', // Jaune vif
+    header: '#f7f7f7', // Gris très clair pour header
   },
   dark: {
+    background: '#181A20',
+    card: '#23252b',
     text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
+    secondaryText: '#9BA1A6',
+    title: '#FF6F6F',
+    button: '#D32F2F',
+    buttonText: '#fff',
+    border: '#23252b',
+    error: '#FF6F6F',
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    tabIconSelected: '#FF6F6F',
+    inputBackground: '#23252b',
+    primary: '#FF6F6F', // Rouge pompier plus clair pour dark
+    accent: '#FFD600', // Jaune vif
+    header: '#23252b', // Gris sombre pour header
   },
 };

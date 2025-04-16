@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mon-test-web",
-    "slug": "mon-test-web",
+    "name": "pompiers-pertes-charge",
+    "slug": "pompiers-pertes-charge",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,7 +9,8 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.pompiers-pertes-charge"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,8 +19,6 @@
       }
     },
     "web": {
-      "bundler": "metro",
-      "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
