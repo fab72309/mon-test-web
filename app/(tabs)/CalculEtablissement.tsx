@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput, SafeAreaView } from 'react-native';
+import { Header } from '@/components/ui/Header';
 import { useThemeContext } from '../../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useMemoSegments } from '../../context/MemoSegmentsContext';
@@ -21,12 +22,7 @@ const getStyles = (palette: typeof Colors.light) => StyleSheet.create({
     marginBottom: 12,
     marginTop: 8,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: palette.title,
-    letterSpacing: 0.5,
-  },
+
   savedSection: {
     backgroundColor: palette.background,
     borderRadius: 16,
@@ -176,13 +172,9 @@ export default function CalculEtablissement() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, {backgroundColor: palette.background}]}>
-      <View style={{zIndex:10, backgroundColor: palette.header, paddingHorizontal:16}}>
-        <View style={styles.headerRow}>
-          <Ionicons name="construct" size={28} color={palette.title} style={{marginRight:8}}/>
-          <Text style={[styles.title, {color: palette.title}]}>Calcul établissement</Text>
-        </View>
-      </View>
+    <SafeAreaView style={[styles.container, {backgroundColor: palette.background}]}> 
+      {/* Header harmonisé */}
+      <Header title="Etablissement" iconName="build" iconFamily="MaterialIcons" iconColor="#D32F2F" titleColor="#D32F2F" iconSize={32} style={{marginBottom: 10, marginTop: 0, alignSelf: 'center'}} />
       <ScrollView contentContainerStyle={{padding:16, paddingTop:0}} keyboardShouldPersistTaps="handled">
         {/* Section Tronçons mémorisés */}
         <View style={styles.savedSection}>

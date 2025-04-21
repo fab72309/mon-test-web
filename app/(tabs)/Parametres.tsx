@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, SafeAreaView } from 'react-native';
+import { Header } from '@/components/ui/Header';
 import { useThemeContext } from '../../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -14,17 +15,7 @@ export default function Parametres() {
   const [isFrench, setIsFrench] = useState(true);
 
   const styles = StyleSheet.create({
-    headerRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 18,
-      marginTop: 10,
-    },
-    title: {
-      fontSize: 26,
-      fontWeight: 'bold',
-      color: palette.text,
-    },
+
     section: {
       backgroundColor: '#fff',
       borderRadius: 18,
@@ -67,12 +58,8 @@ export default function Parametres() {
 
   return (
     <SafeAreaView style={{flex:1, backgroundColor: palette.background}}>
-      <View style={{zIndex:10, backgroundColor:palette.background, paddingHorizontal:16}}>
-        <View style={styles.headerRow}>
-          <Ionicons name="settings" size={28} color={palette.title} style={{marginRight:8}}/>
-          <Text style={[styles.title, {color: palette.title}]}>Paramètres</Text>
-        </View>
-      </View>
+      {/* Header harmonisé */}
+      <Header title="Paramètres" iconName="settings" iconFamily="MaterialIcons" iconColor="#D32F2F" titleColor="#D32F2F" iconSize={32} style={{marginBottom: 10, marginTop: 0, alignSelf: 'center'}} />
       <ScrollView contentContainerStyle={{padding:16, paddingTop:0, backgroundColor: palette.background}}>
         {/* Langue */}
         <View style={[styles.section, {backgroundColor: palette.card}]}> 

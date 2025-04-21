@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Header } from '@/components/ui/Header';
 import { useThemeContext } from '../../context/ThemeContext';
 import { Colors } from '../../constants/Colors';
 
@@ -56,6 +57,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
+
   logoContainer: {
     alignItems: 'center',
   },

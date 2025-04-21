@@ -3,8 +3,13 @@ import { View, Text, TextInput, StyleSheet, Alert, ScrollView, TouchableOpacity 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@react-navigation/native';
 
-const DEFAULT_VALUES = {
+type DebitTable = {
+  [diam: string]: {
+    [debit: string]: string;
+  };
+};
 
+const DEFAULT_VALUES: DebitTable = {
   "45": { "250": "0.3", "500": "1.3", "1000": "Impossible" },
   "70": { "250": "0.05", "500": "0.2", "1000": "0.5", "1500": "1.5", "2000": "2" },
   "110": { "250": "Impossible", "500": "Impossible", "1000": "0.05", "1500": "0.1", "2000": "0.3" }
@@ -20,7 +25,7 @@ export default function ValeursPerso() {
   React.useLayoutEffect(() => {
     navigation.setOptions({ headerBackTitle: 'Retour' });
   }, [navigation]);
-  const [values, setValues] = useState(DEFAULT_VALUES);
+  const [values, setValues] = useState<DebitTable>(DEFAULT_VALUES);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -62,8 +67,8 @@ export default function ValeursPerso() {
     }
   }, [values, loading]);
 
-  const handleChange = (diam, debit, val) => {
-    setValues(prev => ({
+  const handleChange: (diam: string, debit: string, val: string) => void = (diam, debit, val) => {
+    setValues((prev: typeof DEFAULT_VALUES) => ({
       ...prev,
       [diam]: { ...prev[diam], [debit]: val }
     }));

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Modal, ScrollView } from 'react-native';
+import { Header } from '@/components/ui/Header';
 import { useThemeContext } from '../../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -9,13 +10,15 @@ const getStyles = (palette: typeof Colors.light) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: palette.background,
-    padding: 16,
+    paddingHorizontal: 8,
+    paddingTop: 8,
+    paddingBottom: 0,
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingBottom: 32,
+    paddingBottom: 8,
     backgroundColor: palette.background,
   },
   resultUnit: {
@@ -107,27 +110,27 @@ const getStyles = (palette: typeof Colors.light) => StyleSheet.create({
   },
   calculateBtn: {
     backgroundColor: palette.primary,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 36,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
     alignItems: 'center',
     alignSelf: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
     elevation: 2,
   },
   calculateBtnText: {
     color: palette.buttonText,
     fontWeight: 'bold',
-    fontSize: 18,
-    letterSpacing: 1,
+    fontSize: 16,
+    letterSpacing: 0.5,
   },
   card: {
     width: '100%',
     maxWidth: 340,
     backgroundColor: palette.card,
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 18,
+    borderRadius: 14,
+    padding: 10,
+    marginBottom: 10,
     shadowColor: palette.accent,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -135,17 +138,16 @@ const getStyles = (palette: typeof Colors.light) => StyleSheet.create({
     elevation: 3,
     alignSelf: 'center',
   },
-  headerBox: { flexDirection: 'row', alignItems: 'center', justifyContent:'center', marginTop: 32, marginBottom: 18 },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', color: palette.primary, letterSpacing: 1 },
+
   backBtn: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginTop: 10, marginBottom: 10 },
   backTxt: { color: palette.primary, fontWeight: 'bold', fontSize: 18, marginLeft: 6 },
   formSection: { width: '100%', maxWidth: 340, alignSelf: 'center', marginTop: 24, marginBottom: 18 },
-  label: { fontSize: 16, fontWeight: 'bold', color: palette.text, marginTop: 18, marginBottom: 6, marginLeft: 2 },
+  label: { fontSize: 14, fontWeight: 'bold', color: palette.text, marginTop: 8, marginBottom: 3, marginLeft: 2 },
   inputRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  input: { width: 120, borderWidth: 1, borderColor: palette.border, borderRadius: 8, padding: 8, fontSize: 16, backgroundColor: palette.inputBackground, color: palette.text, textAlign: 'center' },
-  resultBox: { width: '100%', marginTop: 28, padding: 16, borderRadius: 10, backgroundColor: palette.card, alignItems: 'center' },
-  resultLabel: { fontSize: 18, fontWeight: 'bold', color: palette.primary, marginBottom: 6 },
-  resultValue: { fontSize: 22, color: palette.text, fontWeight: 'bold' },
+  input: { width: 90, borderWidth: 1, borderColor: palette.border, borderRadius: 7, padding: 6, fontSize: 15, backgroundColor: palette.inputBackground, color: palette.text, textAlign: 'center' },
+  resultBox: { width: '100%', marginTop: 12, padding: 8, borderRadius: 10, backgroundColor: palette.card, alignItems: 'center' },
+  resultLabel: { fontSize: 15, fontWeight: 'bold', color: palette.primary, marginBottom: 4 },
+  resultValue: { fontSize: 18, color: palette.text, fontWeight: 'bold' },
 });
 
 export default function DebitMaxPEI() {
@@ -198,10 +200,8 @@ export default function DebitMaxPEI() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.headerBox}>
-          <Ionicons name="water" size={36} color={palette.primary} style={{marginRight: 8}} />
-          <Text style={styles.headerTitle}>Débit max du PEI</Text>
-        </View>
+        {/* Header harmonisé */}
+        <Header title="Débit max du PEI" iconName="opacity" iconFamily="MaterialIcons" iconColor="#D32F2F" titleColor="#D32F2F" iconSize={32} style={{marginBottom: 10, marginTop: 0, paddingLeft: 0}} />
         <View style={styles.card}>
           <View style={styles.formSection}>
             <Text style={styles.label}>Pression statique (bar)</Text>
@@ -217,7 +217,7 @@ export default function DebitMaxPEI() {
             </View>
             <Text style={styles.label}>Pression résiduelle (bar)</Text>
             <View style={styles.inputRow}>
-              <Ionicons name="water" size={22} color={palette.accent} style={{ marginRight: 6 }} />
+              <Ionicons name="water" size={22} color="#2196F3" style={{ marginRight: 6 }} />
               <TextInput
                 style={styles.input}
                 keyboardType="numeric"
@@ -416,7 +416,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   container: { flex: 1, justifyContent: 'flex-start', alignItems: 'center', backgroundColor: '#fff', padding: 20 },
-  headerBox: { flexDirection: 'row', alignItems: 'center', justifyContent:'center', marginTop: 32, marginBottom: 18 },
+  headerBox: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    marginTop: 32, 
+    marginBottom: 18 
+  },
   headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#D32F2F', letterSpacing: 1 },
 
   backBtn: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginTop: 10, marginBottom: 10 },
