@@ -4,6 +4,7 @@ import Slider from '@react-native-community/slider';
 import { Header } from '@/components/ui/Header';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Colors } from '@/constants/Colors';
 
 const combustibleOptions = [
   { label: 'Cellulosique (1 MW/m³)', value: 1 },
@@ -232,201 +233,228 @@ const [besoinEmulseurTotal, setBesoinEmulseurTotal] = useState('');
       style={{ flex: 1 }}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <View style={styles.tabContainer}>
-          <TouchableOpacity style={[styles.tab, mode === 'combustible' && styles.tabActive]} onPress={() => setMode('combustible')}>
-            <Text style={[styles.tabText, mode === 'combustible' && styles.tabTextActive]}>Par combustible</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.tab, mode === 'surface' && styles.tabActive]} onPress={() => setMode('surface')}>
-            <Text style={[styles.tabText, mode === 'surface' && styles.tabTextActive]}>Par surface</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.tab, mode === 'fhli' && styles.tabActive]} onPress={() => setMode('fhli')}>
-            <Text style={[styles.tabText, mode === 'fhli' && styles.tabTextActive]}>FHLI</Text>
-          </TouchableOpacity>
-        </View>
-
-        {mode === 'combustible' && (
-          <View style={styles.card}>
-            <Text style={styles.label}>Surface (m²)</Text>
-            <TextInput style={styles.input} value={surface} onChangeText={setSurface} keyboardType="numeric" placeholder="Surface en m²" />
-            <Text style={styles.label}>Hauteur (m)</Text>
-            <TextInput style={styles.input} value={hauteur} onChangeText={setHauteur} keyboardType="numeric" placeholder="Hauteur en m" />
-            <Text style={styles.label}>Fraction impliquée (%)</Text>
-            <Slider
-              minimumValue={0}
-              maximumValue={100}
-              step={1}
-              value={fraction}
-              onValueChange={setFraction}
-              style={{ marginVertical: 6 }}
-            />
-            <Text style={{ textAlign: 'center', marginBottom: 6 }}>{fraction} %</Text>
-            <Text style={styles.label}>Combustible</Text>
-            <View style={styles.selectRow}>
-              {combustibleOptions.map(opt => (
-                <TouchableOpacity key={opt.label} style={[styles.button, combustible === opt.value && styles.selectedButton]} onPress={() => setCombustible(opt.value)}>
-                  <Text style={[styles.buttonText, combustible === opt.value && styles.buttonTextSelected]}>{opt.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.label}>Rendement</Text>
-            <View style={styles.selectRow}>
-              {rendementOptions.map(opt => (
-                <TouchableOpacity key={opt.label} style={[styles.button, rendement === opt.value && styles.selectedButton]} onPress={() => setRendement(opt.value)}>
-                  <Text style={[styles.buttonText, rendement === opt.value && styles.buttonTextSelected]}>{opt.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.label}>Stratégie</Text>
-            <View style={styles.selectRow}>
-              <TouchableOpacity style={[styles.button, strategie === 'offensive' && styles.selectedButton]} onPress={() => setStrategie('offensive')}>
-                <Text style={[styles.buttonText, strategie === 'offensive' && styles.buttonTextSelected]}>Offensive</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.button, strategie === 'propagation' && styles.selectedButton]} onPress={() => setStrategie('propagation')}>
-                <Text style={[styles.buttonText, strategie === 'propagation' && styles.buttonTextSelected]}>Propagation</Text>
-              </TouchableOpacity>
-            </View>
-            {strategie === 'propagation' && (
-              <>
-                <Text style={styles.label}>Surface verticale à défendre (m²)</Text>
-                <TextInput style={styles.input} value={surfaceVertical} onChangeText={setSurfaceVertical} keyboardType="numeric" placeholder="Surface verticale" />
-                <Text style={styles.label}>Débit par m² (L/min/m²)</Text>
-                <TextInput style={styles.input} value={String(propRate)} onChangeText={v => setPropRate(Number(v))} keyboardType="numeric" placeholder="Débit propagation" />
-              </>
-            )}
-            <TouchableOpacity style={styles.button} onPress={handleCalculate}>
-              <Text style={styles.buttonText}>Calculer</Text>
+        <View style={styles.card}>
+          <Text style={styles.title} numberOfLines={1} adjustsFontSizeToFit>Dimensionnement des moyens hydrauliques</Text>
+          <View style={styles.tabContainer}>
+            <TouchableOpacity style={[styles.tab, mode === 'combustible' && styles.tabActive]} onPress={() => setMode('combustible')}>
+              <MaterialCommunityIcons name="fire" size={16} color={mode === 'combustible' ? '#fff' : '#111'} style={{ marginRight: 4 }} />
+              <Text style={[styles.tabText, mode === 'combustible' && styles.tabTextActive]}>Puissance</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, { backgroundColor: '#eee' }]} onPress={handleReset}>
-              <Text style={styles.buttonText}>Réinitialiser</Text>
+            <TouchableOpacity style={[styles.tab, mode === 'surface' && styles.tabActive]} onPress={() => setMode('surface')}>
+              <MaterialCommunityIcons name="vector-square" size={16} color={mode === 'surface' ? '#fff' : '#111'} style={{ marginRight: 4 }} />
+              <Text style={[styles.tabText, mode === 'surface' && styles.tabTextActive]}>Surface</Text>
             </TouchableOpacity>
-            {result && (
-              <View style={styles.resultBox}>
-                <Text style={styles.resultTitle}>Résultat</Text>
-                <Text style={styles.resultText}>{result}</Text>
-              </View>
-            )}
+            <TouchableOpacity style={[styles.tab, mode === 'fhli' && styles.tabActive]} onPress={() => setMode('fhli')}>
+              <MaterialCommunityIcons name="gas-station" size={16} color={mode === 'fhli' ? '#fff' : '#111'} style={{ marginRight: 4 }} />
+<Text style={[styles.tabText, mode === 'fhli' && styles.tabTextActive]}>FHLI</Text>
+            </TouchableOpacity>
           </View>
-        )}
-
-        {mode === 'surface' && (
-          <View style={styles.card}>
-            <Text style={styles.label}>Surface (m²)</Text>
-            <TextInput style={styles.input} value={surface} onChangeText={setSurface} keyboardType="numeric" placeholder="Surface en m²" />
-            <Text style={styles.label}>Débit d’application (L/min/m²)</Text>
-            <View style={styles.selectRow}>
-              {rateOptions.map(opt => (
-                <TouchableOpacity key={opt} style={[styles.button, appRate === opt && styles.selectedButton]} onPress={() => setAppRate(opt)}>
-                  <Text style={[styles.buttonText, appRate === opt && styles.buttonTextSelected]}>{opt}</Text>
+          {mode === 'combustible' && (
+            <>
+              <View style={styles.selectRow}>
+                <TouchableOpacity style={[styles.button, strategie === 'offensive' && styles.selectedButton]} onPress={() => setStrategie('offensive')}>
+                  <MaterialCommunityIcons name="fire-truck" size={16} color={strategie === 'offensive' ? '#fff' : '#111'} style={{ marginRight: 4 }} />
+                  <Text style={[styles.buttonText, strategie === 'offensive' && styles.buttonTextSelected]}>Attaque offensive</Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-            <TouchableOpacity style={styles.button} onPress={handleCalculate}>
-              <Text style={styles.buttonText}>Calculer</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, { backgroundColor: '#eee' }]} onPress={handleReset}>
-              <Text style={styles.buttonText}>Réinitialiser</Text>
-            </TouchableOpacity>
-            {result && (
-              <View style={styles.resultBox}>
-                <Text style={styles.resultTitle}>Résultat</Text>
-                <Text style={styles.resultText}>{result}</Text>
+                <TouchableOpacity style={[styles.button, strategie === 'propagation' && styles.selectedButton]} onPress={() => setStrategie('propagation')}>
+                  <MaterialCommunityIcons name="shield" size={16} color={strategie === 'propagation' ? '#fff' : '#111'} style={{ marginRight: 4 }} />
+                  <Text style={[styles.buttonText, strategie === 'propagation' && styles.buttonTextSelected]}>Lutte propagation</Text>
+                </TouchableOpacity>
               </View>
-            )}
-          </View>
-        )}
+              {strategie === 'offensive' && (
+                <>
+                  <Text style={styles.label}>Surface (m²)</Text>
+                  <TextInput style={styles.input} value={surface} onChangeText={setSurface} keyboardType="numeric" placeholder="Surface en m²" />
+                  <Text style={styles.label}>Hauteur (m)</Text>
+                  <TextInput style={styles.input} value={hauteur} onChangeText={setHauteur} keyboardType="numeric" placeholder="Hauteur en m" />
+                  <Text style={styles.label}>Fraction impliquée (%)</Text>
+                  <Slider
+                    minimumValue={0}
+                    maximumValue={100}
+                    step={1}
+                    value={fraction}
+                    onValueChange={setFraction}
+                    style={{ marginVertical: 6 }}
+                  />
+                  <Text style={{ textAlign: 'center', marginBottom: 6 }}>{fraction} %</Text>
+                  <Text style={styles.label}>Combustible</Text>
+                  <View style={styles.selectRow}>
+                    {combustibleOptions.map(opt => (
+                      <TouchableOpacity key={opt.label} style={[styles.button, combustible === opt.value && styles.selectedButton]} onPress={() => setCombustible(opt.value)}>
+                        <Text style={[styles.buttonText, combustible === opt.value && styles.buttonTextSelected]}>{opt.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <Text style={styles.label}>Rendement</Text>
+                  <View style={styles.selectRow}>
+                    {rendementOptions.map(opt => (
+                      <TouchableOpacity key={opt.label} style={[styles.button, rendement === opt.value && styles.selectedButton]} onPress={() => setRendement(opt.value)}>
+                        <Text style={[styles.buttonText, rendement === opt.value && styles.buttonTextSelected]}>{opt.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
 
-        {mode === 'fhli' && (
-          <View style={styles.card}>
-            <View style={styles.selectRow}>
-              <TouchableOpacity style={[styles.button, fhliTab === 'foam' && styles.selectedButton]} onPress={() => setFhliTab('foam')}>
-                <Text style={[styles.buttonText, fhliTab === 'foam' && styles.buttonTextSelected]}>Extinction mousse</Text>
+                  <TouchableOpacity style={styles.button} onPress={handleCalculate}>
+                    <Text style={styles.buttonText}>Calculer</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.button, { backgroundColor: '#eee' }]} onPress={handleReset}>
+                    <Text style={styles.buttonText}>Réinitialiser</Text>
+                  </TouchableOpacity>
+                  {result && (
+                    <View style={styles.resultBox}>
+                      <Text style={styles.resultTitle}>Résultat</Text>
+                      <Text style={styles.resultText}>{result}</Text>
+                    </View>
+                  )}
+                </>
+              )}
+              {strategie === 'propagation' && (
+                <>
+                  <Text style={styles.label}>Surface verticale (m²)</Text>
+                  <TextInput style={styles.input} value={surfaceVertical} onChangeText={setSurfaceVertical} keyboardType="numeric" placeholder="Surface en m²" />
+                  <TouchableOpacity style={styles.button} onPress={handleCalculate}>
+                    <Text style={styles.buttonText}>Calculer</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.button, { backgroundColor: '#eee' }]} onPress={handleReset}>
+                    <Text style={styles.buttonText}>Réinitialiser</Text>
+                  </TouchableOpacity>
+                  {result && (
+                    <View style={styles.resultBox}>
+                      <Text style={styles.resultTitle}>Résultat</Text>
+                      <Text style={styles.resultText}>{result}</Text>
+                    </View>
+                  )}
+                </>
+              )}
+          )}
+          {mode === 'surface' && (
+            <>
+              <Text style={styles.label}>Surface (m²)</Text>
+              <TextInput style={styles.input} value={surface} onChangeText={setSurface} keyboardType="numeric" placeholder="Surface en m²" />
+              <Text style={styles.label}>Débit d’application (L/min/m²)</Text>
+              <View style={styles.selectRow}>
+                {rateOptions.map(opt => (
+                  <TouchableOpacity key={opt} style={[styles.button, appRate === opt && styles.selectedButton]} onPress={() => setAppRate(opt)}>
+                    <Text style={[styles.buttonText, appRate === opt && styles.buttonTextSelected]}>{opt}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <TouchableOpacity style={styles.button} onPress={handleCalculate}>
+                <Text style={styles.buttonText}>Calculer</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.button, fhliTab === 'structure' && styles.selectedButton]} onPress={() => setFhliTab('structure')}>
-                <Text style={[styles.buttonText, fhliTab === 'structure' && styles.buttonTextSelected]}>Protection structure</Text>
+              <TouchableOpacity style={[styles.button, { backgroundColor: '#eee' }]} onPress={handleReset}>
+                <Text style={styles.buttonText}>Réinitialiser</Text>
               </TouchableOpacity>
-            </View>
-            {fhliTab === 'foam' && (
-              <>
-                <Text style={styles.label}>Surface à protéger (m²)</Text>
-                <TextInput style={styles.input} value={fhliFoamSurface} onChangeText={setFhliFoamSurface} keyboardType="numeric" placeholder="Surface en m²" />
-                <Text style={styles.label}>Taux d’application</Text>
-                <View style={styles.selectRow}>
-                  <TouchableOpacity style={[styles.button, fhliFoamRateType === 'Hydrocarbures' && styles.selectedButton]} onPress={() => setFhliFoamRateType('Hydrocarbures')}>
-                    <Text style={[styles.buttonText, fhliFoamRateType === 'Hydrocarbures' && styles.buttonTextSelected]}>Hydrocarbures</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.button, fhliFoamRateType === 'Liquides polaires' && styles.selectedButton]} onPress={() => setFhliFoamRateType('Liquides polaires')}>
-                    <Text style={[styles.buttonText, fhliFoamRateType === 'Liquides polaires' && styles.buttonTextSelected]}>Polaires</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.button, fhliFoamRateType === 'Taux du POI' && styles.selectedButton]} onPress={() => setFhliFoamRateType('Taux du POI')}>
-                    <Text style={[styles.buttonText, fhliFoamRateType === 'Taux du POI' && styles.buttonTextSelected]}>Taux du POI</Text>
-                  </TouchableOpacity>
+              {result && (
+                <View style={styles.resultBox}>
+                  <Text style={styles.resultTitle}>Résultat</Text>
+                  <Text style={styles.resultText}>{result}</Text>
                 </View>
-                {fhliFoamRateType === 'Taux du POI' && (
-                  <TextInput style={styles.input} value={fhliFoamCustomRate} onChangeText={setFhliFoamCustomRate} keyboardType="numeric" placeholder="Taux personnalisé (L/min/m²)" />
-                )}
-                <Text style={styles.label}>Concentration (%)</Text>
-                <TextInput style={styles.input} value={fhliFoamConc} onChangeText={setFhliFoamConc} keyboardType="numeric" placeholder="Concentration (%)" />
-                <Text style={styles.label}>Durée de temporisation (min)</Text>
-                <TextInput style={styles.input} value={fhliFoamTempDur} onChangeText={setFhliFoamTempDur} keyboardType="numeric" placeholder="20" />
-                <Text style={styles.label}>Durée d’extinction (min)</Text>
-                <TextInput style={styles.input} value={fhliFoamExtDur} onChangeText={setFhliFoamExtDur} keyboardType="numeric" placeholder="40" />
-                <Text style={styles.label}>Durée de maintien (min)</Text>
-                <TextInput style={styles.input} value={fhliFoamMaintDur} onChangeText={setFhliFoamMaintDur} keyboardType="numeric" placeholder="10" />
-                <TouchableOpacity style={styles.button} onPress={handleFhliFoamCalc}>
-                  <Text style={styles.buttonText}>Calculer mousse</Text>
+              )}
+            </>
+          )}
+          {mode === 'fhli' && (
+            <>
+              <View style={styles.selectRow}>
+                <TouchableOpacity style={[styles.button, fhliTab === 'foam' && styles.selectedButton]} onPress={() => setFhliTab('foam')}>
+                  <Text style={[styles.buttonText, fhliTab === 'foam' && styles.buttonTextSelected]}>Extinction mousse</Text>
                 </TouchableOpacity>
-                {fhliFoamDebit && (
-                  <View style={styles.resultBox}>
-                    <Text style={styles.resultTitle}>Débit instantané</Text>
-                    <Text style={styles.resultText}>{fhliFoamDebit} L/min</Text>
-                  </View>
-                )}
-                {besoinEmulseurTotal && (
-                  <View style={styles.resultBox}>
-                    <Text style={styles.resultTitle}>Besoin total émulseur</Text>
-                    <Text style={styles.resultText}>{besoinEmulseurTotal} m³</Text>
-                  </View>
-                )}
-              </>
-            )}
-            {fhliTab === 'structure' && (
-              <>
-                <Text style={styles.label}>Débit du rideau d’eau</Text>
-                <View style={styles.selectRow}>
-                  {FHLI_STRUCT_OPTIONS.map(opt => (
-                    <TouchableOpacity key={opt.label} style={[styles.button, fhliStructOption === opt.flow && styles.selectedButton]} onPress={() => setFhliStructOption(opt.flow)}>
-                      <Text style={[styles.buttonText, fhliStructOption === opt.flow && styles.buttonTextSelected]}>{opt.label}</Text>
+                <TouchableOpacity style={[styles.button, fhliTab === 'structure' && styles.selectedButton]} onPress={() => setFhliTab('structure')}>
+                  <Text style={[styles.buttonText, fhliTab === 'structure' && styles.buttonTextSelected]}>Protection structure</Text>
+                </TouchableOpacity>
+              </View>
+              {fhliTab === 'foam' && (
+                <>
+                  <Text style={styles.label}>Surface à protéger (m²)</Text>
+                  <TextInput style={styles.input} value={fhliFoamSurface} onChangeText={setFhliFoamSurface} keyboardType="numeric" placeholder="Surface en m²" />
+                  <Text style={styles.label}>Taux d’application</Text>
+                  <View style={styles.selectRow}>
+                    <TouchableOpacity style={[styles.button, fhliFoamRateType === 'Hydrocarbures' && styles.selectedButton]} onPress={() => setFhliFoamRateType('Hydrocarbures')}>
+                      <Text style={[styles.buttonText, fhliFoamRateType === 'Hydrocarbures' && styles.buttonTextSelected]}>Hydrocarbures</Text>
                     </TouchableOpacity>
-                  ))}
-                </View>
-                <Text style={styles.label}>Longueur (m)</Text>
-                <TextInput style={styles.input} value={fhliStructLength} onChangeText={setFhliStructLength} keyboardType="numeric" placeholder="Longueur à protéger" />
-                <TouchableOpacity style={styles.button} onPress={handleCalculate}>
-                  <Text style={styles.buttonText}>Calculer rideau</Text>
-                </TouchableOpacity>
-                {result && (
-                  <View style={styles.resultBox}>
-                    <Text style={styles.resultTitle}>Résultat</Text>
-                    <Text style={styles.resultText}>{result}</Text>
+                    <TouchableOpacity style={[styles.button, fhliFoamRateType === 'Liquides polaires' && styles.selectedButton]} onPress={() => setFhliFoamRateType('Liquides polaires')}>
+                      <Text style={[styles.buttonText, fhliFoamRateType === 'Liquides polaires' && styles.buttonTextSelected]}>Polaires</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.button, fhliFoamRateType === 'Taux du POI' && styles.selectedButton]} onPress={() => setFhliFoamRateType('Taux du POI')}>
+                      <Text style={[styles.buttonText, fhliFoamRateType === 'Taux du POI' && styles.buttonTextSelected]}>Taux du POI</Text>
+                    </TouchableOpacity>
                   </View>
-                )}
-              </>
-            )}
-            <TouchableOpacity style={[styles.button, { backgroundColor: '#eee', marginTop: 10 }]} onPress={handleReset}>
-              <Text style={styles.buttonText}>Réinitialiser</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+                  {fhliFoamRateType === 'Taux du POI' && (
+                    <TextInput style={styles.input} value={fhliFoamCustomRate} onChangeText={setFhliFoamCustomRate} keyboardType="numeric" placeholder="Taux personnalisé (L/min/m²)" />
+                  )}
+                  <Text style={styles.label}>Concentration (%)</Text>
+                  <TextInput style={styles.input} value={fhliFoamConc} onChangeText={setFhliFoamConc} keyboardType="numeric" placeholder="Concentration (%)" />
+                  <Text style={styles.label}>Durée de temporisation (min)</Text>
+                  <TextInput style={styles.input} value={fhliFoamTempDur} onChangeText={setFhliFoamTempDur} keyboardType="numeric" placeholder="20" />
+                  <Text style={styles.label}>Durée d’extinction (min)</Text>
+                  <TextInput style={styles.input} value={fhliFoamExtDur} onChangeText={setFhliFoamExtDur} keyboardType="numeric" placeholder="40" />
+                  <Text style={styles.label}>Durée de maintien (min)</Text>
+                  <TextInput style={styles.input} value={fhliFoamMaintDur} onChangeText={setFhliFoamMaintDur} keyboardType="numeric" placeholder="10" />
+                  <TouchableOpacity style={styles.button} onPress={handleFhliFoamCalc}>
+                    <Text style={styles.buttonText}>Calculer mousse</Text>
+                  </TouchableOpacity>
+                  {fhliFoamDebit && (
+                    <View style={styles.resultBox}>
+                      <Text style={styles.resultTitle}>Débit instantané</Text>
+                      <Text style={styles.resultText}>{fhliFoamDebit} L/min</Text>
+                    </View>
+                  )}
+                  {besoinEmulseurTotal && (
+                    <View style={styles.resultBox}>
+                      <Text style={styles.resultTitle}>Besoin total émulseur</Text>
+                      <Text style={styles.resultText}>{besoinEmulseurTotal} m³</Text>
+                    </View>
+                  )}
+                </>
+              )}
+              {fhliTab === 'structure' && (
+                <>
+                  <Text style={styles.label}>Débit du rideau d’eau</Text>
+                  <View style={styles.selectRow}>
+                    {FHLI_STRUCT_OPTIONS.map(opt => (
+                      <TouchableOpacity key={opt.label} style={[styles.button, fhliStructOption === opt.flow && styles.selectedButton]} onPress={() => setFhliStructOption(opt.flow)}>
+                        <Text style={[styles.buttonText, fhliStructOption === opt.flow && styles.buttonTextSelected]}>{opt.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <Text style={styles.label}>Longueur (m)</Text>
+                  <TextInput style={styles.input} value={fhliStructLength} onChangeText={setFhliStructLength} keyboardType="numeric" placeholder="Longueur à protéger" />
+                  <TouchableOpacity style={styles.button} onPress={handleCalculate}>
+                    <Text style={styles.buttonText}>Calculer rideau</Text>
+                  </TouchableOpacity>
+                  {result && (
+                    <View style={styles.resultBox}>
+                      <Text style={styles.resultTitle}>Résultat</Text>
+                      <Text style={styles.resultText}>{result}</Text>
+                    </View>
+                  )}
+                </>
+              )}
+              <TouchableOpacity style={[styles.button, { backgroundColor: '#eee', marginTop: 10 }]} onPress={handleReset}>
+                <Text style={styles.buttonText}>Réinitialiser</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
-  </>
-);
+  </>);
+
+
 }
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: '#f8fafc',
     paddingBottom: 30,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 8,
+    flexWrap: 'nowrap',
+    color: Colors.light.primary,
   },
   tabContainer: {
     flexDirection: 'row', 
