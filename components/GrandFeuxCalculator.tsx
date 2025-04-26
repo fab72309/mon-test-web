@@ -46,7 +46,8 @@ function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?: boolean }) {
   // États
   const [mode, setMode] = useState<'combustible'|'surface'|'fhli'>('combustible');
   const [strategie, setStrategie] = useState<'offensive'|'propagation'>('offensive');
-  const [surface, setSurface] = useState('');
+  const [surface, setSurface] = useState(''); // Pour l'approche Puissance
+const [surfaceApprocheSurface, setSurfaceApprocheSurface] = useState(''); // Pour l'approche Surface
   const [hauteur, setHauteur] = useState('');
   const [fraction, setFraction] = useState(0);
   const [combustible, setCombustible] = useState(2);
@@ -437,7 +438,83 @@ function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?: boolean }) {
           {mode === 'surface' && (
             <View>
               <Text style={[styles.label,{color:'#111'}]}>Surface (m²)</Text>
-              <TextInput style={styles.input} value={surface} onChangeText={setSurface} keyboardType="numeric"/>
+              <TextInput style={styles.input} value={surfaceApprocheSurface} onChangeText={setSurfaceApprocheSurface} keyboardType="numeric"/>
+              <Text style={{fontWeight:'bold', color:'#111', marginTop:16, marginBottom:4}}>Taux d'application (L/min/m²)</Text>
+              <Text style={{fontWeight:'bold', color:'#D32F2F', fontSize:18, textAlign:'center', marginBottom:2}}>{tauxApplication} L/min/m²</Text>
+              <View style={{flexDirection:'row',alignItems:'center',gap:10}}>
+                <Slider
+                  style={{flex:1}}
+                  minimumValue={1}
+                  maximumValue={20}
+                  step={1}
+                  value={tauxApplication}
+                  onValueChange={setTauxApplication}
+                  minimumTrackTintColor="#D32F2F"
+                  maximumTrackTintColor="#eee"
+                  thumbTintColor="#D32F2F"
+                />
+              </View>
+              <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginTop:2}}>
+                <TouchableOpacity onPress={()=>setTauxApplication(1)}>
+                  <Text style={{color:tauxApplication===1?'#D32F2F':'#888', fontWeight:tauxApplication===1?'bold':'normal'}}>1</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={()=>setTauxApplication(10)}>
+                  <Text style={{color:tauxApplication===10?'#D32F2F':'#888', fontWeight:tauxApplication===10?'bold':'normal'}}>10</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={()=>setTauxApplication(20)}>
+                  <Text style={{color:tauxApplication===20?'#D32F2F':'#888', fontWeight:tauxApplication===20?'bold':'normal'}}>20</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={{flexDirection:'row', justifyContent:'center', gap:10, marginTop:14}}>
+                <TouchableOpacity
+                  style={{
+                    borderWidth: 2,
+                    borderColor: '#D32F2F',
+                    backgroundColor: '#fff',
+                    borderRadius: 18,
+                    paddingVertical: 8,
+                    paddingHorizontal: 22,
+                  }}
+                  onPress={() => {
+                    setSurfaceApprocheSurface('');
+                    setTauxApplication(6);
+                    setResultPropagation(null);
+                    setCalcDetailsPropagation(null);
+                  }}
+                >
+                  <Text style={{color: '#D32F2F', fontWeight: 'bold', fontSize: 16}}>Réinitialiser</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#D32F2F',
+                    borderRadius: 18,
+                    paddingVertical: 8,
+                    paddingHorizontal: 22,
+                  }}
+                  onPress={() => {
+                    // Calcul spécifique à l'approche Surface
+                    const surf = parseFloat(surfaceApprocheSurface);
+                    const taux = parseFloat(String(tauxApplication));
+                    if (isNaN(surf) || isNaN(taux)) return;
+                    const debit = surf * taux;
+                    const res = debit.toFixed(2);
+                    setResultPropagation(res);
+                    setCalcDetailsPropagation(`${surf} m² × ${taux} L/min/m² = ${res} L/min`);
+                  }}
+                >
+                  <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Calculer</Text>
+                </TouchableOpacity>
+              </View>
+              {/* Résultat sous les boutons */}
+              {resultPropagation && (
+                <View style={styles.resultBlock}>
+                  <Text style={styles.resultTitle}>Résultat</Text>
+                  <Text style={styles.resultText}>{resultPropagation} L/min</Text>
+                  {calcDetailsPropagation && (
+                    <Text style={styles.resultText}>{calcDetailsPropagation}</Text>
+                  )}
+                </View>
+              )}
             </View>
           )}
 
