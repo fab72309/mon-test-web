@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Platform, TouchableOpacity, ScrollView, KeyboardAvoidingView, Alert } from 'react-native';
 import Slider from '@react-native-community/slider';
+import PropagationButtons from './GrandFeuxCalculator_buttons_propagation';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Colors } from '@/constants/Colors';
 import InfoPopup from './InfoPopup';
@@ -50,6 +51,9 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
   const [combustible, setCombustible] = useState(2);
   const [rendement, setRendement] = useState(0.2);
   const [surfaceVertical, setSurfaceVertical] = useState('');
+  const [tauxApplication, setTauxApplication] = useState(6); // valeur par défaut 6 L/min/m²
+  const [showResultPropagation, setShowResultPropagation] = useState(false);
+  const [showResultOffensive, setShowResultOffensive] = useState(false);
   const [result, setResult] = useState<string|null>(null);
   const [qRequis, setQRequis] = useState<string|null>(null);
   const [calcDetails, setCalcDetails] = useState<string|null>(null);
@@ -68,6 +72,8 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
 
   // Handlers
   const handleCalculate = () => {
+    if (strategie === 'propagation') setShowResultPropagation(true);
+    if (strategie === 'offensive') setShowResultOffensive(true);
     let res = '';
     // reset previous flow calculations
     setQRequis(null);
@@ -209,10 +215,8 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
   return (
     <>
       <KeyboardAvoidingView behavior={Platform.OS==='ios'?'padding':undefined} style={{flex:1}}>
-
-
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <View style={styles.card}>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <View style={styles.card}>
           {!hideTitle && (
   <Text style={styles.title} numberOfLines={1}>Dimensionnement des moyens hydrauliques</Text>
 ) }
@@ -223,20 +227,58 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
             <TouchableOpacity style={[styles.tab,mode==='surface'&&styles.tabActive]} onPress={()=>setMode('surface')}>
               <MaterialCommunityIcons name="vector-square" size={16} color={mode==='surface'?'#fff':'#111'} style={{marginRight:4}}/><Text style={[styles.tabText,mode==='surface'&&styles.tabTextActive]}>Surface</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.tab,mode==='fhli'&&styles.tabActive]} onPress={()=>setMode('fhli')}>
-              <MaterialCommunityIcons name="gas-station" size={16} color={mode==='fhli'?'#fff':'#111'} style={{marginRight:4}}/><Text style={[styles.tabText,mode==='fhli'&&styles.tabTextActive]}>FHLI</Text>
+            <TouchableOpacity style={[styles.tab,mode === 'fhli' && styles.tabActive]} onPress={()=>setMode('fhli')}>
+              <MaterialCommunityIcons name="gas-station" size={16} color={mode==='fhli'?'#fff':'#111'} style={{marginRight:4}}/><Text style={[styles.tabText,mode === 'fhli' && styles.tabTextActive]}>FHLI</Text>
             </TouchableOpacity>
           </View>
 
           {/* Combustible */}
-          {mode==='combustible'&&(
+          {mode === 'combustible' && (
             <View>
               <Text style={styles.strategieTitle}>Stratégie</Text>
               <View style={styles.selectRow}>
                 <TouchableOpacity style={[styles.button,strategie==='offensive'&&styles.selectedButton]} onPress={()=>setStrategie('offensive')}><View style={{flexDirection:'row',alignItems:'center'}}><MaterialCommunityIcons name="fire-truck" size={16} color={strategie==='offensive'?'#fff':'#111'} style={{marginRight:4}}/><Text style={[styles.buttonText,strategie==='offensive'&&styles.buttonTextSelected]}>Attaque offensive</Text></View></TouchableOpacity>
                 <TouchableOpacity style={[styles.button,strategie==='propagation'&&styles.selectedButton]} onPress={()=>setStrategie('propagation')}><View style={{flexDirection:'row',alignItems:'center'}}><MaterialCommunityIcons name="shield" size={16} color={strategie==='propagation'?'#fff':'#111'} style={{marginRight:4}}/><Text style={[styles.buttonText,strategie==='propagation'&&styles.buttonTextSelected]}>Lutte propagation</Text></View></TouchableOpacity>
               </View>
-              {strategie==='offensive'&&(
+              {strategie === 'propagation' && (
+                <View>
+                  <Text style={{fontWeight:'bold', color:'#111', marginTop:12, marginBottom:4}}>Surface verticale à protéger (m²)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={surfaceVertical}
+                    onChangeText={setSurfaceVertical}
+                    keyboardType="numeric"
+                    placeholder="Surface verticale en m²"
+                  />
+                  <Text style={{fontWeight:'bold', color:'#111', marginTop:16, marginBottom:4}}>Taux d'application (L/min/m²)</Text>
+                  <Text style={{fontWeight:'bold', color:'#D32F2F', fontSize:18, textAlign:'center', marginBottom:2}}>{tauxApplication} L/min/m²</Text>
+                  <View style={{flexDirection:'row',alignItems:'center',gap:10}}>
+                    <Slider
+                      style={{flex:1}}
+                      minimumValue={1}
+                      maximumValue={20}
+                      step={1}
+                      value={tauxApplication}
+                      onValueChange={setTauxApplication}
+                      minimumTrackTintColor="#D32F2F"
+                      maximumTrackTintColor="#eee"
+                      thumbTintColor="#D32F2F"
+                    />
+                  </View>
+                  <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginTop:2}}>
+                    <TouchableOpacity onPress={()=>setTauxApplication(1)}>
+                      <Text style={{color:tauxApplication===1?'#D32F2F':'#888', fontWeight:tauxApplication===1?'bold':'normal'}}>1</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={()=>setTauxApplication(6)}>
+                      <Text style={{color:tauxApplication===6?'#D32F2F':'#888', fontWeight:tauxApplication===6?'bold':'normal'}}>6</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={()=>setTauxApplication(20)}>
+                      <Text style={{color:tauxApplication===20?'#D32F2F':'#888', fontWeight:tauxApplication===20?'bold':'normal'}}>20</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+              {strategie === 'offensive' && (
                 <View>
                   {/* Puissance par m³ de combustible */}
                   <Text style={{fontWeight:'bold', color:'#111'}}>Puissance par m³ de combustible</Text>
@@ -254,25 +296,15 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
                       style={{marginVertical:6,width:'100%'}}
                     />
                     <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%'}}>
-  <TouchableOpacity style={[styles.combustibleSliderLabelTouch, {flex: 1, alignItems: 'flex-start'}]} onPress={()=>setCombustible(1)}>
-    <Text style={[
-      styles.combustibleSliderLabel,
-      { color: '#D32F2F', textDecorationLine: combustible >= 0.99 && combustible <= 1.01 ? 'underline' : 'none', fontWeight: combustible >= 0.99 && combustible <= 1.01 ? 'bold' : 'normal', textAlign: 'left' }
-    ]}>Bois</Text>
-  </TouchableOpacity>
-  <TouchableOpacity style={[styles.combustibleSliderLabelTouch, {flex: 1, alignItems: 'center'}]} onPress={()=>setCombustible(2)}>
-    <Text style={[
-      styles.combustibleSliderLabel,
-      { color: '#D32F2F', textDecorationLine: combustible >= 1.99 && combustible <= 2.01 ? 'underline' : 'none', fontWeight: combustible >= 1.99 && combustible <= 2.01 ? 'bold' : 'normal', textAlign: 'center' }
-    ]}>Mixte</Text>
-  </TouchableOpacity>
-  <TouchableOpacity style={[styles.combustibleSliderLabelTouch, {flex: 1, alignItems: 'flex-end'}]} onPress={()=>setCombustible(2.7)}>
-    <Text style={[
-      styles.combustibleSliderLabel,
-      { color: '#D32F2F', textDecorationLine: combustible >= 2.69 && combustible <= 2.71 ? 'underline' : 'none', fontWeight: combustible >= 2.69 && combustible <= 2.71 ? 'bold' : 'normal', textAlign: 'right' }
-    ]}>Plastique</Text>
-  </TouchableOpacity>
-</View>
+                      {[1, 2, 2.7].map(val=>(
+                        <TouchableOpacity key={val} style={styles.combustibleSliderLabelTouch} onPress={()=>setCombustible(val)}>
+                          <Text style={[
+                            styles.combustibleSliderLabel,
+                            { color: '#D32F2F', textDecorationLine: combustible >= val - 0.01 && combustible <= val + 0.01 ? 'underline' : 'none', fontWeight: combustible >= val - 0.01 && combustible <= val + 0.01 ? 'bold' : 'normal', textAlign: 'center' }
+                          ]}>{val}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
                   </View>
                   {/* Surface */}
                   <Text style={{fontWeight:'bold', color:'#111'}}>Surface (m²)</Text>
@@ -304,7 +336,7 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
                   </View>
                   <Text style={{fontWeight:'bold', color:'#111'}}>Rendement des lances</Text>
                   <View style={styles.selectRow}>
-                    {rendementOptions.map(opt => (
+                    {[{label: '20%', value: 0.2}, {label: '50%', value: 0.5}].map(opt => (
                       <TouchableOpacity key={opt.label} style={[styles.button,rendement===opt.value&&styles.selectedButton]} onPress={()=>setRendement(opt.value)}>
                         <Text style={[styles.buttonText,rendement===opt.value&&styles.buttonTextSelected]}>{opt.label}</Text>
                       </TouchableOpacity>
@@ -337,114 +369,22 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
                         <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Calculer</Text>
                       </TouchableOpacity>
                     </View>
-                    {result !== null && (
+                    {strategie==='offensive' && showResultOffensive && result !== null && (
                       <View style={styles.resultBlock}>
-                        <View style={{flexDirection:'row',alignItems:'center',justifyContent:'center',width:'100%',marginBottom:8}}>
-  <Text style={[styles.resultHeader,{textAlign:'center',flex:0}]}>Résultat</Text>
-  <TouchableOpacity onPress={()=>Alert.alert('Explications du calcul',
-    `Comment ce débit est‑il calculé ?
-1. On estime la puissance P du feu (en MW) par :
-P = S(m²) x H(m) x P_vol(MW/m³) x (%volume en feu /100)
-où P_vol vaut 1 MW/m³ pour le bois, 2 MW/m³ pour un stockage mixte, 2,7 MW/m³ pour du plastique.
-
-2. On déduit le débit d’eau Q (en L/min) nécessaire pour absorber cette puissance, en tenant compte du rendement des lances :
-Q = P x 42,5 (pour 50 % de rendement : 1 L/min → 0,023 MW absorbé donc 42,5 L/min absorbent 1 MW)
-Q = P x 106 (pour 20 % de rendement : 1 L/min → 0,009 MW donc 106 L/min absorbent 1 MW)
-
-3. Pour obtenir Q en m³/h, on multiplie par 0,06 :
-Q(m³/h) = Q(L/min) x 0,06
-Si Q dépasse 12 000 L/min (720 m³/h), la limite réglementaire ou opérationnelle est atteinte.`)}>
-    <View style={{backgroundColor:'#d1d5db',borderRadius:12,paddingHorizontal:6,paddingVertical:2,marginLeft:8,justifyContent:'center',alignItems:'center',minWidth:24,minHeight:24,marginTop:-6}}>
-  <Text style={{fontStyle:'italic',color:'#D32F2F',fontSize:17,fontWeight:'bold',textAlign:'center'}}>i</Text>
-</View>
-  </TouchableOpacity>
-</View>
-<Text style={styles.resultLine}><Text style={styles.resultLabel}>Puissance max estimée :</Text> {result} MW</Text>
-{qRequis && (
-  <>
-    <Text style={styles.resultLine}><Text style={styles.resultLabel}>Débit requis :</Text> {qRequis} L/min ({(parseFloat(qRequis)*0.06).toFixed(2)} m³/h)</Text>
-    {calcDetails && (
-      <Text style={styles.resultDetail}>{calcDetails}</Text>
-    )}
-    {(parseFloat(qRequis) > 12000 || (parseFloat(qRequis)/60) > 720) && (
-      <View style={styles.warningBox}>
-        <Text style={styles.warningText}>⚠️ Dépasse la limite réglementaire ou opérationnelle (12 000 L/min ou 720 m³/h)</Text>
-      </View>
-    )}
-  </>
-)}
-                      </View>
-                    )}
-                  </View>
-                </View>
-              )}
-              {strategie==='propagation'&&(
-                <View>
-                  <Text style={[styles.label,{color:'#111'}]}>Surface verticale (m²)</Text>
-                  <TextInput style={styles.input} value={surfaceVertical} onChangeText={setSurfaceVertical} keyboardType="numeric" placeholder="Surface verticale en m²"/>
-                  <View style={{alignItems: 'center', marginTop: 16}}>
-                    <View style={{flexDirection: 'row', justifyContent: 'center', gap: 10}}>
-                      <TouchableOpacity
-                        style={{
-                          borderWidth: 2,
-                          borderColor: '#D32F2F',
-                          backgroundColor: '#fff',
-                          borderRadius: 18,
-                          paddingVertical: 8,
-                          paddingHorizontal: 22,
-                        }}
-                        onPress={handleReset}
-                      >
-                        <Text style={{color: '#D32F2F', fontWeight: 'bold', fontSize: 16}}>Réinitialiser</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{
-                          backgroundColor: '#D32F2F',
-                          borderRadius: 18,
-                          paddingVertical: 8,
-                          paddingHorizontal: 22,
-                        }}
-                        onPress={handleCalculate}
-                      >
-                        <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Calculer</Text>
-                      </TouchableOpacity>
-                    </View>
-                    {result !== null && (
-                      <View style={styles.resultBlock}>
-                        <View style={{flexDirection:'row',alignItems:'center',justifyContent:'center',width:'100%',marginBottom:8}}>
-  <Text style={[styles.resultHeader,{textAlign:'center',flex:0}]}>Résultat</Text>
-  <TouchableOpacity onPress={()=>Alert.alert('Explications du calcul',
-    `Comment ce débit est‑il calculé ?
-1. On estime la puissance P du feu (en MW) par :
-P = S(m²) x H(m) x P_vol(MW/m³) x (%volume en feu /100)
-où P_vol vaut 1 MW/m³ pour le bois, 2 MW/m³ pour un stockage mixte, 2,7 MW/m³ pour du plastique.
-
-2. On déduit le débit d’eau Q (en L/min) nécessaire pour absorber cette puissance, en tenant compte du rendement des lances :
-Q = P x 42,5 (pour 50 % de rendement : 1 L/min → 0,023 MW absorbé donc 42,5 L/min absorbent 1 MW)
-Q = P x 106 (pour 20 % de rendement : 1 L/min → 0,009 MW donc 106 L/min absorbent 1 MW)
-
-3. Pour obtenir Q en m³/h, on multiplie par 0,06 :
-Q(m³/h) = Q(L/min) x 0,06
-Si Q dépasse 12 000 L/min (720 m³/h), la limite réglementaire ou opérationnelle est atteinte.`)}>
-    <View style={{backgroundColor:'#d1d5db',borderRadius:12,paddingHorizontal:6,paddingVertical:2,marginLeft:8,justifyContent:'center',alignItems:'center',minWidth:24,minHeight:24,marginTop:-6}}>
-  <Text style={{fontStyle:'italic',color:'#D32F2F',fontSize:17,fontWeight:'bold',textAlign:'center'}}>i</Text>
-</View>
-  </TouchableOpacity>
-</View>
-<Text style={styles.resultLine}><Text style={styles.resultLabel}>Puissance max estimée :</Text> {result} MW</Text>
-{qRequis && (
-  <>
-    <Text style={styles.resultLine}><Text style={styles.resultLabel}>Débit requis :</Text> {qRequis} L/min ({(parseFloat(qRequis)*0.06).toFixed(2)} m³/h)</Text>
-    {calcDetails && (
-      <Text style={styles.resultDetail}>{calcDetails}</Text>
-    )}
-    {(parseFloat(qRequis) > 12000 || (parseFloat(qRequis)/60) > 720) && (
-      <View style={styles.warningBox}>
-        <Text style={styles.warningText}>⚠️ Dépasse la limite réglementaire ou opérationnelle (12 000 L/min ou 720 m³/h)</Text>
-      </View>
-    )}
-  </>
-)}
+                        <View style={{flexDirection:'row',alignItems:'center',justifyContent:'center',marginBottom:8}}>
+                          <Text style={[styles.resultHeader,{textAlign:'center'}]}>Résultat</Text>
+                        </View>
+                        <Text style={{fontSize:18,fontWeight:'bold',color:'#111',marginBottom:4}}>
+                          {result} MW
+                        </Text>
+                        {qRequis && (
+                          <Text style={{fontSize:16,color:'#222'}}>
+                            Débit requis : {qRequis} L/min ({(parseFloat(qRequis)*0.06).toLocaleString('fr-FR', {maximumFractionDigits:2})} m³/h)
+                          </Text>
+                        )}
+                        {calcDetails && (
+                          <Text style={{fontSize:14,color:'#555',marginTop:6}}>{calcDetails}</Text>
+                        )}
                       </View>
                     )}
                   </View>
@@ -454,38 +394,50 @@ Si Q dépasse 12 000 L/min (720 m³/h), la limite réglementaire ou opéra
           )}
 
           {/* Surface */}
-          {mode==='surface'&&(<View><Text style={[styles.label,{color:'#111'}]}>Surface (m²)</Text><TextInput style={styles.input} value={surface} onChangeText={setSurface} keyboardType="numeric"/><Text style={[styles.label,{color:'#111'}]}>Hauteur (m)</Text><TextInput style={styles.input} value={hauteur} onChangeText={setHauteur} keyboardType="numeric"/><View style={{alignItems: 'center', marginTop: 16}}>
-                    <View style={{flexDirection: 'row', justifyContent: 'center', gap: 10}}>
-                      <TouchableOpacity
-                        style={{
-                          borderWidth: 2,
-                          borderColor: '#D32F2F',
-                          backgroundColor: '#fff',
-                          borderRadius: 18,
-                          paddingVertical: 8,
-                          paddingHorizontal: 22,
-                        }}
-                        onPress={handleReset}
-                      >
-                        <Text style={{color: '#D32F2F', fontWeight: 'bold', fontSize: 16}}>Réinitialiser</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{
-                          backgroundColor: '#D32F2F',
-                          borderRadius: 18,
-                          paddingVertical: 8,
-                          paddingHorizontal: 22,
-                        }}
-                        onPress={handleCalculate}
-                      >
-                        <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Calculer</Text>
-                      </TouchableOpacity>
-                    </View>
-                    {result&&(<View style={styles.resultBlock}><Text style={styles.resultText}>{result}</Text></View>)}
-                  </View></View>)}
+          {mode === 'surface' && (
+            <View>
+              <Text style={[styles.label,{color:'#111'}]}>Surface (m²)</Text>
+              <TextInput style={styles.input} value={surface} onChangeText={setSurface} keyboardType="numeric"/>
+              <Text style={[styles.label,{color:'#111'}]}>Hauteur (m)</Text>
+              <TextInput style={styles.input} value={hauteur} onChangeText={setHauteur} keyboardType="numeric"/>
+              <View style={{alignItems: 'center', marginTop: 16}}>
+                <View style={{flexDirection: 'row', justifyContent: 'center', gap: 10}}>
+                  <TouchableOpacity
+                    style={{
+                      borderWidth: 2,
+                      borderColor: '#D32F2F',
+                      backgroundColor: '#fff',
+                      borderRadius: 18,
+                      paddingVertical: 8,
+                      paddingHorizontal: 22,
+                    }}
+                    onPress={handleReset}
+                  >
+                    <Text style={{color: '#D32F2F', fontWeight: 'bold', fontSize: 16}}>Réinitialiser</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#D32F2F',
+                      borderRadius: 18,
+                      paddingVertical: 8,
+                      paddingHorizontal: 22,
+                    }}
+                    onPress={handleCalculate}
+                  >
+                    <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Calculer</Text>
+                  </TouchableOpacity>
+                </View>
+                {result&&(
+                  <View style={styles.resultBlock}>
+                    <Text style={styles.resultText}>{result}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
 
           {/* FHLI */}
-          {mode==='fhli' && (
+          {mode === 'fhli' && (
             <View>
               <View style={styles.selectRow}>
                 <TouchableOpacity style={[styles.button, fhliTab==='foam' && styles.selectedButton]} onPress={()=>setFhliTab('foam')}>
@@ -554,6 +506,6 @@ Si Q dépasse 12 000 L/min (720 m³/h), la limite réglementaire ou opéra
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
-    </>
+  </>
   );
 }

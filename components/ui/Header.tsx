@@ -19,7 +19,7 @@ interface HeaderProps {
 }
 
 export function Header({ title, iconName, iconColor = '#333', iconSize = 28, iconFamily = 'MaterialIcons', titleColor = '#222', style }: HeaderProps) {
-  let IconComponent = MaterialIcons;
+  let IconComponent: any = MaterialIcons;
   if (iconFamily === 'Ionicons') IconComponent = Ionicons;
   if (iconFamily === 'FontAwesome') IconComponent = FontAwesome;
 
@@ -27,7 +27,6 @@ export function Header({ title, iconName, iconColor = '#333', iconSize = 28, ico
     <View style={[styles.container, style]}>
       {iconName && (
         <IconComponent
-          // @ts-ignore: TypeScript ne peut pas typer dynamiquement toutes les familles d'icônes
           name={iconName as any}
           size={iconSize}
           color={iconColor}
