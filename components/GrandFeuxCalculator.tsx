@@ -29,7 +29,7 @@ const FHLI_STRUCT_OPTIONS = [
   { label: 'Rideau d’eau 40 m (1000 L/min)', length: 40, flow: 1000 },
 ];
 
-export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?: boolean }) {
+function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?: boolean }) {
   // Fonction de réinitialisation
   const handleReset = () => {
     setSurface('');
@@ -79,18 +79,31 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
     setQRequis(null);
     setCalcDetails(null);
     if (mode === 'combustible') {
-      const surf = parseFloat(surface);
-      const haut = parseFloat(hauteur);
-      if (isNaN(surf)||isNaN(haut)) return;
-      // Compute maximum power developed by the fire: P(max) = surface * hauteur * puissance par m³ * (volume en feu /100)
-      const pmax = surf * haut * combustible * (fraction/100);
-      res = pmax.toFixed(2);
-      // Calcul débit requis selon rendement
-      const multiplier = rendement === 0.5 ? 42.5 : 106;
-      const qreqValue = pmax * multiplier;
-      const qreqStr = qreqValue.toFixed(0);
-      setQRequis(qreqStr);
-      setCalcDetails(`${res} MW × ${multiplier} L/min/MW = ${qreqStr} L/min`);
+      if (strategie === 'propagation') {
+        // Correction : Débit = Surface verticale à protéger (m2) x Taux d'application
+        const surfVert = parseFloat(surfaceVertical);
+        const taux = parseFloat(String(tauxApplication));
+        if (isNaN(surfVert) || isNaN(taux)) return;
+        const debit = surfVert * taux;
+        res = debit.toFixed(2);
+        setQRequis(res);
+        setCalcDetails(`${surfVert} m² × ${taux} L/min/m² = ${res} L/min`);
+      } else if (strategie === 'offensive') {
+        const surf = parseFloat(surface);
+        const haut = parseFloat(hauteur);
+        if (isNaN(surf)||isNaN(haut)) return;
+        // Pmax = Surface x Hauteur x Puissance par m3 de combustible x (volume en feu / 100)
+        const pmax = surf * haut * combustible * (fraction/100);
+        // Q (L/min) = Pmax x 42,5 [pour 50% de rendement], Q = Pmax x 106 [pour 20%]
+        let multiplier = rendement === 0.5 ? 42.5 : 106;
+        const qLmin = pmax * multiplier;
+        const qLminStr = qLmin.toFixed(0);
+        const qm3h = qLmin / 16.67; // 1 m3/h = 16.67 L/min
+        const qm3hStr = qm3h.toFixed(2);
+        setResult(`${qLminStr} L/min (${qm3hStr} m³/h)`);
+        setQRequis(qLminStr);
+        setCalcDetails(`Pmax = ${surf} m² × ${haut} m × ${combustible} MW/m³ × (${fraction}/100) = ${pmax.toFixed(2)} MW\nDébit requis : ${pmax.toFixed(2)} MW × ${multiplier} L/min/MW = ${qLminStr} L/min\nSoit ${qm3hStr} m³/h`);
+      }
     } else if (mode === 'surface') {
       const surf = parseFloat(surface);
       const haut = parseFloat(hauteur);
@@ -103,7 +116,7 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
     };
     console.log('GrandFeuxCalculator.handleCalculate:', { surface, hauteur, fraction, combustible, result: res });
     console.log('DEBUG GrandFeuxCalculator.handleCalculate', {res, qRequis, calcDetails});
-    setResult(res);
+    // setResult(res); // supprimé pour ne pas écraser le résultat calculé
   };
   const getTauxReflexe = () => {
     if (fhliFoamRateType === 'Hydrocarbures') return 10;
@@ -215,31 +228,49 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
   return (
     <>
       <KeyboardAvoidingView behavior={Platform.OS==='ios'?'padding':undefined} style={{flex:1}}>
-        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          <View style={styles.card}>
-          {!hideTitle && (
-  <Text style={styles.title} numberOfLines={1}>Dimensionnement des moyens hydrauliques</Text>
-) }
-          <View style={styles.tabContainer}>
-            <TouchableOpacity style={[styles.tab,mode==='combustible'&&styles.tabActive]} onPress={()=>setMode('combustible')}>
-              <MaterialCommunityIcons name="fire" size={16} color={mode==='combustible'?'#fff':'#111'} style={{marginRight:4}}/><Text style={[styles.tabText,mode==='combustible'&&styles.tabTextActive]}>Puissance</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.tab,mode==='surface'&&styles.tabActive]} onPress={()=>setMode('surface')}>
-              <MaterialCommunityIcons name="vector-square" size={16} color={mode==='surface'?'#fff':'#111'} style={{marginRight:4}}/><Text style={[styles.tabText,mode==='surface'&&styles.tabTextActive]}>Surface</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.tab,mode === 'fhli' && styles.tabActive]} onPress={()=>setMode('fhli')}>
-              <MaterialCommunityIcons name="gas-station" size={16} color={mode==='fhli'?'#fff':'#111'} style={{marginRight:4}}/><Text style={[styles.tabText,mode === 'fhli' && styles.tabTextActive]}>FHLI</Text>
-            </TouchableOpacity>
-          </View>
 
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <View style={styles.card}>
+        {/* Titre */}
+        {!hideTitle && (
+          <Text style={styles.title} numberOfLines={1}>Dimensionnement des moyens hydrauliques</Text>
+        )}
+        {/* Tabs */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity style={[styles.tab,mode==='combustible'&&styles.tabActive]} onPress={()=>setMode('combustible')}>
+            <MaterialCommunityIcons name="fire" size={16} color={mode==='combustible'?'#fff':'#111'} style={{marginRight:4}}/>
+            <Text style={[styles.tabText,mode==='combustible'&&styles.tabTextActive]}>Puissance</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.tab,mode==='surface'&&styles.tabActive]} onPress={()=>setMode('surface')}>
+            <MaterialCommunityIcons name="vector-square" size={16} color={mode==='surface'?'#fff':'#111'} style={{marginRight:4}}/>
+            <Text style={[styles.tabText,mode==='surface'&&styles.tabTextActive]}>Surface</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.tab,mode === 'fhli' && styles.tabActive]} onPress={()=>setMode('fhli')}>
+            <MaterialCommunityIcons name="gas-station" size={16} color={mode==='fhli'?'#fff':'#111'} style={{marginRight:4}}/>
+            <Text style={[styles.tabText,mode === 'fhli' && styles.tabTextActive]}>FHLI</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View>
           {/* Combustible */}
           {mode === 'combustible' && (
             <View>
               <Text style={styles.strategieTitle}>Stratégie</Text>
               <View style={styles.selectRow}>
-                <TouchableOpacity style={[styles.button,strategie==='offensive'&&styles.selectedButton]} onPress={()=>setStrategie('offensive')}><View style={{flexDirection:'row',alignItems:'center'}}><MaterialCommunityIcons name="fire-truck" size={16} color={strategie==='offensive'?'#fff':'#111'} style={{marginRight:4}}/><Text style={[styles.buttonText,strategie==='offensive'&&styles.buttonTextSelected]}>Attaque offensive</Text></View></TouchableOpacity>
-                <TouchableOpacity style={[styles.button,strategie==='propagation'&&styles.selectedButton]} onPress={()=>setStrategie('propagation')}><View style={{flexDirection:'row',alignItems:'center'}}><MaterialCommunityIcons name="shield" size={16} color={strategie==='propagation'?'#fff':'#111'} style={{marginRight:4}}/><Text style={[styles.buttonText,strategie==='propagation'&&styles.buttonTextSelected]}>Lutte propagation</Text></View></TouchableOpacity>
+                <TouchableOpacity style={[styles.button,strategie==='offensive'&&styles.selectedButton]} onPress={()=>setStrategie('offensive')}>
+                  <View style={{flexDirection:'row',alignItems:'center'}}>
+                    <MaterialCommunityIcons name="fire-truck" size={16} color={strategie==='offensive'?'#fff':'#111'} style={{marginRight:4}}/>
+                    <Text style={[styles.buttonText,strategie==='offensive'&&styles.buttonTextSelected]}>Attaque offensive</Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.button,strategie==='propagation'&&styles.selectedButton]} onPress={()=>setStrategie('propagation')}>
+                  <View style={{flexDirection:'row',alignItems:'center'}}>
+                    <MaterialCommunityIcons name="shield" size={16} color={strategie==='propagation'?'#fff':'#111'} style={{marginRight:4}}/>
+                    <Text style={[styles.buttonText,strategie==='propagation'&&styles.buttonTextSelected]}>Lutte propagation</Text>
+                  </View>
+                </TouchableOpacity>
               </View>
+
               {strategie === 'propagation' && (
                 <View>
                   <Text style={{fontWeight:'bold', color:'#111', marginTop:12, marginBottom:4}}>Surface verticale à protéger (m²)</Text>
@@ -276,8 +307,25 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
                       <Text style={{color:tauxApplication===20?'#D32F2F':'#888', fontWeight:tauxApplication===20?'bold':'normal'}}>20</Text>
                     </TouchableOpacity>
                   </View>
+                  <View style={{alignItems:'center', marginTop:14}}>
+                    <PropagationButtons onReset={handleReset} onCalculate={handleCalculate} />
+                    {/* Résultat sous les boutons */}
+                    {result && (
+                      <View style={styles.resultBlock}>
+                        <Text style={styles.resultTitle}>Résultat</Text>
+                        <Text style={styles.resultText}>{result}</Text>
+                        {qRequis && (
+                          <Text style={styles.resultText}>Débit requis : {qRequis} L/min</Text>
+                        )}
+                        {calcDetails && (
+                          <Text style={styles.resultText}>{calcDetails}</Text>
+                        )}
+                      </View>
+                    )}
+                  </View>
                 </View>
               )}
+
               {strategie === 'offensive' && (
                 <View>
                   {/* Puissance par m³ de combustible */}
@@ -329,7 +377,9 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
                     <View style={styles.combustibleSliderLabels}>
                       {[0,25,50,75,100].map(val=>(
                         <TouchableOpacity key={val} style={styles.combustibleSliderLabelTouch} onPress={()=>setFraction(val)}>
-                          <Text style={[styles.combustibleSliderLabel, fraction===val && styles.combustibleSliderLabelActive]}>{val}%</Text>
+                          <Text style={[
+                            styles.combustibleSliderLabel, fraction===val && styles.combustibleSliderLabelActive
+                          ]}>{val}%</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -342,8 +392,9 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
                       </TouchableOpacity>
                     ))}
                   </View>
-                  <View style={{alignItems: 'center', marginTop: 16}}>
-                    <View style={{flexDirection: 'row', justifyContent: 'center', gap: 10}}>
+                  {/* Boutons et résultat */}
+                  <View style={{alignItems:'center', marginTop:14}}>
+                    <View style={{flexDirection:'row', justifyContent:'center', alignItems:'center', marginBottom:8}}>
                       <TouchableOpacity
                         style={{
                           borderWidth: 2,
@@ -352,6 +403,7 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
                           borderRadius: 18,
                           paddingVertical: 8,
                           paddingHorizontal: 22,
+                          marginRight: 8
                         }}
                         onPress={handleReset}
                       >
@@ -362,28 +414,23 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
                           backgroundColor: '#D32F2F',
                           borderRadius: 18,
                           paddingVertical: 8,
-                          paddingHorizontal: 22,
+                          paddingHorizontal: 22
                         }}
                         onPress={handleCalculate}
                       >
                         <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Calculer</Text>
                       </TouchableOpacity>
                     </View>
-                    {strategie==='offensive' && showResultOffensive && result !== null && (
+                    {/* Résultat sous les boutons */}
+                    {result && (
                       <View style={styles.resultBlock}>
-                        <View style={{flexDirection:'row',alignItems:'center',justifyContent:'center',marginBottom:8}}>
-                          <Text style={[styles.resultHeader,{textAlign:'center'}]}>Résultat</Text>
-                        </View>
-                        <Text style={{fontSize:18,fontWeight:'bold',color:'#111',marginBottom:4}}>
-                          {result} MW
-                        </Text>
+                        <Text style={styles.resultTitle}>Résultat</Text>
+                        <Text style={styles.resultText}>{result}</Text>
                         {qRequis && (
-                          <Text style={{fontSize:16,color:'#222'}}>
-                            Débit requis : {qRequis} L/min ({(parseFloat(qRequis)*0.06).toLocaleString('fr-FR', {maximumFractionDigits:2})} m³/h)
-                          </Text>
+                          <Text style={styles.resultText}>Débit requis : {qRequis} L/min</Text>
                         )}
                         {calcDetails && (
-                          <Text style={{fontSize:14,color:'#555',marginTop:6}}>{calcDetails}</Text>
+                          <Text style={styles.resultText}>{calcDetails}</Text>
                         )}
                       </View>
                     )}
@@ -398,41 +445,6 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
             <View>
               <Text style={[styles.label,{color:'#111'}]}>Surface (m²)</Text>
               <TextInput style={styles.input} value={surface} onChangeText={setSurface} keyboardType="numeric"/>
-              <Text style={[styles.label,{color:'#111'}]}>Hauteur (m)</Text>
-              <TextInput style={styles.input} value={hauteur} onChangeText={setHauteur} keyboardType="numeric"/>
-              <View style={{alignItems: 'center', marginTop: 16}}>
-                <View style={{flexDirection: 'row', justifyContent: 'center', gap: 10}}>
-                  <TouchableOpacity
-                    style={{
-                      borderWidth: 2,
-                      borderColor: '#D32F2F',
-                      backgroundColor: '#fff',
-                      borderRadius: 18,
-                      paddingVertical: 8,
-                      paddingHorizontal: 22,
-                    }}
-                    onPress={handleReset}
-                  >
-                    <Text style={{color: '#D32F2F', fontWeight: 'bold', fontSize: 16}}>Réinitialiser</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={{
-                      backgroundColor: '#D32F2F',
-                      borderRadius: 18,
-                      paddingVertical: 8,
-                      paddingHorizontal: 22,
-                    }}
-                    onPress={handleCalculate}
-                  >
-                    <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Calculer</Text>
-                  </TouchableOpacity>
-                </View>
-                {result&&(
-                  <View style={styles.resultBlock}>
-                    <Text style={styles.resultText}>{result}</Text>
-                  </View>
-                )}
-              </View>
             </View>
           )}
 
@@ -473,18 +485,18 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
                   <TouchableOpacity style={styles.button} onPress={handleFhliFoamCalc}>
                     <Text style={styles.buttonText}>Calculer mousse</Text>
                   </TouchableOpacity>
-                  {fhliFoamDebit && (
-                    <View style={styles.resultBlock}>
-                      <Text style={styles.resultTitle}>Débit instantané</Text>
-                      <Text style={styles.resultText}>{fhliFoamDebit} L/min</Text>
-                    </View>
-                  )}
-                  {besoinEmulseurTotal && (
-                    <View style={styles.resultBlock}>
-                      <Text style={styles.resultTitle}>Besoin total émulseur</Text>
-                      <Text style={styles.resultText}>{besoinEmulseurTotal} m³</Text>
-                    </View>
-                  )}
+                </View>
+              )}
+              {fhliFoamDebit && (
+                <View style={styles.resultBlock}>
+                  <Text style={styles.resultTitle}>Débit instantané</Text>
+                  <Text style={styles.resultText}>{fhliFoamDebit} L/min</Text>
+                </View>
+              )}
+              {besoinEmulseurTotal && (
+                <View style={styles.resultBlock}>
+                  <Text style={styles.resultTitle}>Besoin total émulseur</Text>
+                  <Text style={styles.resultText}>{besoinEmulseurTotal} m³</Text>
                 </View>
               )}
               {fhliTab==='structure' && (
@@ -504,8 +516,12 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
             </View>
           )}
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  </>
+      </View>
+    </ScrollView>
+  </KeyboardAvoidingView>
+      </>
   );
 }
+
+export default GrandFeuxCalculator;
+
