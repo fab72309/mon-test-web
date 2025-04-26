@@ -173,8 +173,8 @@ export default function CalculEtablissement() {
 
   return (
     <SafeAreaView style={[styles.container, {backgroundColor: palette.background}]}> 
-      {/* Header harmonisé */}
-      <Header title="Etablissement" iconName="build" iconFamily="MaterialIcons" iconColor="#D32F2F" titleColor="#D32F2F" iconSize={32} style={{marginBottom: 10, marginTop: 0, alignSelf: 'center'}} />
+      {/* Header */}
+      <Header title="Établissement" iconName="construct" iconFamily="Ionicons" iconColor="#D32F2F" titleColor="#D32F2F" iconSize={32} style={{marginBottom: 10, marginTop: 0, paddingLeft: 0}} />
       <ScrollView contentContainerStyle={{padding:16, paddingTop:0}} keyboardShouldPersistTaps="handled">
         {/* Section Tronçons mémorisés */}
         <View style={styles.savedSection}>

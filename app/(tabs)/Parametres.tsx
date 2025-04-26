@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, TouchableOpacity, Switch, ScrollView, SafeAreaV
 import { Header } from '@/components/ui/Header';
 import { useThemeContext } from '../../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 
 import { Colors } from '../../constants/Colors';
 
@@ -11,7 +10,7 @@ export default function Parametres() {
   const { theme, setTheme } = useThemeContext();
   const palette = Colors[theme];
 
-  const router = useRouter();
+
   const [isFrench, setIsFrench] = useState(true);
 
   const styles = StyleSheet.create({
