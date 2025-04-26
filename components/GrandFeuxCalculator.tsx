@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Platform, TouchableOpacity, ScrollView, KeyboardAvoidingView } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Platform, TouchableOpacity, ScrollView, KeyboardAvoidingView, Alert } from 'react-native';
 import Slider from '@react-native-community/slider';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Colors } from '@/constants/Colors';
@@ -28,7 +28,7 @@ const FHLI_STRUCT_OPTIONS = [
   { label: 'Rideau d’eau 40 m (1000 L/min)', length: 40, flow: 1000 },
 ];
 
-export default function GrandFeuxCalculator() {
+export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?: boolean }) {
   // Fonction de réinitialisation
   const handleReset = () => {
     setSurface('');
@@ -38,6 +38,8 @@ export default function GrandFeuxCalculator() {
     setRendement(0.2);
     setSurfaceVertical('');
     setResult(null);
+    setQRequis(null);
+    setCalcDetails(null);
   }
   // États
   const [mode, setMode] = useState<'combustible'|'surface'|'fhli'>('combustible');
@@ -49,6 +51,8 @@ export default function GrandFeuxCalculator() {
   const [rendement, setRendement] = useState(0.2);
   const [surfaceVertical, setSurfaceVertical] = useState('');
   const [result, setResult] = useState<string|null>(null);
+  const [qRequis, setQRequis] = useState<string|null>(null);
+  const [calcDetails, setCalcDetails] = useState<string|null>(null);
   const [fhliTab, setFhliTab] = useState<'foam'|'structure'>('foam');
   const [fhliFoamSurface, setFhliFoamSurface] = useState('');
   const [fhliFoamRateType, setFhliFoamRateType] = useState<'Hydrocarbures'|'Liquides polaires'|'Taux du POI'>('Hydrocarbures');
@@ -65,23 +69,34 @@ export default function GrandFeuxCalculator() {
   // Handlers
   const handleCalculate = () => {
     let res = '';
+    // reset previous flow calculations
+    setQRequis(null);
+    setCalcDetails(null);
     if (mode === 'combustible') {
       const surf = parseFloat(surface);
       const haut = parseFloat(hauteur);
       if (isNaN(surf)||isNaN(haut)) return;
-      const vol = surf * haut * (fraction/100);
-      res = (vol * combustible * rendement).toFixed(2);
+      // Compute maximum power developed by the fire: P(max) = surface * hauteur * puissance par m³ * (volume en feu /100)
+      const pmax = surf * haut * combustible * (fraction/100);
+      res = pmax.toFixed(2);
+      // Calcul débit requis selon rendement
+      const multiplier = rendement === 0.5 ? 42.5 : 106;
+      const qreqValue = pmax * multiplier;
+      const qreqStr = qreqValue.toFixed(0);
+      setQRequis(qreqStr);
+      setCalcDetails(`${res} MW × ${multiplier} L/min/MW = ${qreqStr} L/min`);
     } else if (mode === 'surface') {
       const surf = parseFloat(surface);
       const haut = parseFloat(hauteur);
       if (isNaN(surf)||isNaN(haut)) return;
       res = (surf * haut).toFixed(2);
     } else {
-      // FHLI structure calc
-      const length = parseFloat(fhliStructLength);
-      if (isNaN(length)) return;
-      res = ((fhliStructOption * length)/1000).toFixed(2);
-    }
+      // autres modes : clear
+      setQRequis(null);
+      setCalcDetails(null);
+    };
+    console.log('GrandFeuxCalculator.handleCalculate:', { surface, hauteur, fraction, combustible, result: res });
+    console.log('DEBUG GrandFeuxCalculator.handleCalculate', {res, qRequis, calcDetails});
     setResult(res);
   };
   const getTauxReflexe = () => {
@@ -110,6 +125,62 @@ export default function GrandFeuxCalculator() {
 
   // Styles avant return
   const styles = StyleSheet.create({
+  resultBlock: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 18,
+    marginTop: 22,
+    alignItems: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#f1f1f1',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: {width:0, height:2},
+    elevation: 2,
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
+  },
+  resultHeader: {
+    color: '#D32F2F',
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginBottom: 10,
+    letterSpacing: 0.2,
+  },
+  resultLine: {
+    fontSize: 17,
+    color: '#222',
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  resultLabel: {
+    color: '#D32F2F',
+    fontWeight: 'bold',
+    fontSize: 17,
+  },
+  resultDetail: {
+    fontSize: 15,
+    color: '#666',
+    fontStyle: 'italic',
+    marginTop: 4,
+    marginBottom: 2,
+  },
+  warningBox: {
+    backgroundColor: '#ffeaea',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#D32F2F',
+  },
+  warningText: {
+    color: '#D32F2F',
+    fontWeight: 'bold',
+    fontSize: 15,
+    textAlign: 'left',
+  },
     container:{flexGrow:1,backgroundColor:'#f8fafc',paddingBottom:30},
     card:{backgroundColor:'#fff',borderRadius:18,padding:18,margin:10,shadowColor:'#000',shadowOpacity:0.06,shadowRadius:8,shadowOffset:{width:0,height:2},elevation:2},
     title:{fontSize:14,fontWeight:'bold',textAlign:'center',marginVertical:8,color:Colors.light.primary},
@@ -136,10 +207,20 @@ export default function GrandFeuxCalculator() {
   });
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS==='ios'?'padding':undefined} style={{flex:1}}>
+    <>
+      <View style={{padding: 10, backgroundColor: '#ffe', borderBottomWidth: 1, borderColor: '#ccc'}}>
+        <Text style={{color: '#D32F2F', fontWeight: 'bold'}}>DEBUG Bloc résultat</Text>
+        <Text>result = {String(result)}</Text>
+        <Text>qRequis = {String(qRequis)}</Text>
+        <Text>calcDetails = {String(calcDetails)}</Text>
+      </View>
+      <KeyboardAvoidingView behavior={Platform.OS==='ios'?'padding':undefined} style={{flex:1}}>
+
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
-          <Text style={styles.title} numberOfLines={1}>Dimensionnement des moyens hydrauliques</Text>
+          {!hideTitle && (
+  <Text style={styles.title} numberOfLines={1}>Dimensionnement des moyens hydrauliques</Text>
+) }
           <View style={styles.tabContainer}>
             <TouchableOpacity style={[styles.tab,mode==='combustible'&&styles.tabActive]} onPress={()=>setMode('combustible')}>
               <MaterialCommunityIcons name="fire" size={16} color={mode==='combustible'?'#fff':'#111'} style={{marginRight:4}}/><Text style={[styles.tabText,mode==='combustible'&&styles.tabTextActive]}>Puissance</Text>
@@ -234,94 +315,179 @@ export default function GrandFeuxCalculator() {
                       </TouchableOpacity>
                     ))}
                   </View>
-                  <View style={{flexDirection: 'row', justifyContent: 'center', marginTop: 16, gap: 10}}>
-  <TouchableOpacity
-    style={{
-      borderWidth: 2,
-      borderColor: '#D32F2F',
-      backgroundColor: '#fff',
-      borderRadius: 18,
-      paddingVertical: 8,
-      paddingHorizontal: 22,
-      marginRight: 4,
-    }}
-    onPress={handleReset}
-  >
-    <Text style={{color: '#D32F2F', fontWeight: 'bold', fontSize: 16}}>Réinitialiser</Text>
-  </TouchableOpacity>
-  <TouchableOpacity
-    style={{
-      backgroundColor: '#D32F2F',
-      borderRadius: 18,
-      paddingVertical: 8,
-      paddingHorizontal: 22,
-    }}
-    onPress={handleCalculate}
-  >
-    <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Calculer</Text>
+                  <View style={{alignItems: 'center', marginTop: 16}}>
+                    <View style={{flexDirection: 'row', justifyContent: 'center', gap: 10}}>
+                      <TouchableOpacity
+                        style={{
+                          borderWidth: 2,
+                          borderColor: '#D32F2F',
+                          backgroundColor: '#fff',
+                          borderRadius: 18,
+                          paddingVertical: 8,
+                          paddingHorizontal: 22,
+                        }}
+                        onPress={handleReset}
+                      >
+                        <Text style={{color: '#D32F2F', fontWeight: 'bold', fontSize: 16}}>Réinitialiser</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#D32F2F',
+                          borderRadius: 18,
+                          paddingVertical: 8,
+                          paddingHorizontal: 22,
+                        }}
+                        onPress={handleCalculate}
+                      >
+                        <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Calculer</Text>
+                      </TouchableOpacity>
+                    </View>
+                    {result !== null && (
+                      <View style={styles.resultBlock}>
+                        <View style={{flexDirection:'row',alignItems:'center',justifyContent:'center',width:'100%',marginBottom:8}}>
+  <Text style={[styles.resultHeader,{textAlign:'center',flex:0}]}>Résultat</Text>
+  <TouchableOpacity onPress={()=>Alert.alert('Explications du calcul',
+    `Comment ce débit est‑il calculé ?
+1. On estime la puissance P du feu (en MW) par :
+P = S(m²) x H(m) x P_vol(MW/m³) x (%volume en feu /100)
+où P_vol vaut 1 MW/m³ pour le bois, 2 MW/m³ pour un stockage mixte, 2,7 MW/m³ pour du plastique.
+
+2. On déduit le débit d’eau Q (en L/min) nécessaire pour absorber cette puissance, en tenant compte du rendement des lances :
+Q = P x 42,5 (pour 50 % de rendement : 1 L/min → 0,023 MW absorbé donc 42,5 L/min absorbent 1 MW)
+Q = P x 106 (pour 20 % de rendement : 1 L/min → 0,009 MW donc 106 L/min absorbent 1 MW)
+
+3. Pour obtenir Q en m³/h, on multiplie par 0,06 :
+Q(m³/h) = Q(L/min) x 0,06
+Si Q dépasse 12 000 L/min (720 m³/h), la limite réglementaire ou opérationnelle est atteinte.`)}>
+    <View style={{backgroundColor:'#d1d5db',borderRadius:12,paddingHorizontal:6,paddingVertical:2,marginLeft:8,justifyContent:'center',alignItems:'center',minWidth:24,minHeight:24,marginTop:-6}}>
+  <Text style={{fontStyle:'italic',color:'#D32F2F',fontSize:17,fontWeight:'bold',textAlign:'center'}}>i</Text>
+</View>
   </TouchableOpacity>
 </View>
-                  {result&&(<View style={styles.resultBox}><Text style={styles.resultText}>{result}</Text></View>)}
+<Text style={styles.resultLine}><Text style={styles.resultLabel}>Puissance max estimée :</Text> {result} MW</Text>
+{qRequis && (
+  <>
+    <Text style={styles.resultLine}><Text style={styles.resultLabel}>Débit requis :</Text> {qRequis} L/min ({(parseFloat(qRequis)*0.06).toFixed(2)} m³/h)</Text>
+    {calcDetails && (
+      <Text style={styles.resultDetail}>{calcDetails}</Text>
+    )}
+    {(parseFloat(qRequis) > 12000 || (parseFloat(qRequis)/60) > 720) && (
+      <View style={styles.warningBox}>
+        <Text style={styles.warningText}>⚠️ Dépasse la limite réglementaire ou opérationnelle (12 000 L/min ou 720 m³/h)</Text>
+      </View>
+    )}
+  </>
+)}
+                      </View>
+                    )}
+                  </View>
                 </View>
               )}
-              {strategie==='propagation'&&(<View><Text style={[styles.label,{color:'#111'}]}>Surface verticale (m²)</Text><TextInput style={styles.input} value={surfaceVertical} onChangeText={setSurfaceVertical} keyboardType="numeric" placeholder="Surface verticale en m²"/><View style={{flexDirection: 'row', justifyContent: 'center', marginTop: 16, gap: 10}}>
-  <TouchableOpacity
-    style={{
-      borderWidth: 2,
-      borderColor: '#D32F2F',
-      backgroundColor: '#fff',
-      borderRadius: 18,
-      paddingVertical: 8,
-      paddingHorizontal: 22,
-      marginRight: 4,
-    }}
-    onPress={handleReset}
-  >
-    <Text style={{color: '#D32F2F', fontWeight: 'bold', fontSize: 16}}>Réinitialiser</Text>
+              {strategie==='propagation'&&(
+                <View>
+                  <Text style={[styles.label,{color:'#111'}]}>Surface verticale (m²)</Text>
+                  <TextInput style={styles.input} value={surfaceVertical} onChangeText={setSurfaceVertical} keyboardType="numeric" placeholder="Surface verticale en m²"/>
+                  <View style={{alignItems: 'center', marginTop: 16}}>
+                    <View style={{flexDirection: 'row', justifyContent: 'center', gap: 10}}>
+                      <TouchableOpacity
+                        style={{
+                          borderWidth: 2,
+                          borderColor: '#D32F2F',
+                          backgroundColor: '#fff',
+                          borderRadius: 18,
+                          paddingVertical: 8,
+                          paddingHorizontal: 22,
+                        }}
+                        onPress={handleReset}
+                      >
+                        <Text style={{color: '#D32F2F', fontWeight: 'bold', fontSize: 16}}>Réinitialiser</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#D32F2F',
+                          borderRadius: 18,
+                          paddingVertical: 8,
+                          paddingHorizontal: 22,
+                        }}
+                        onPress={handleCalculate}
+                      >
+                        <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Calculer</Text>
+                      </TouchableOpacity>
+                    </View>
+                    {result !== null && (
+                      <View style={styles.resultBlock}>
+                        <View style={{flexDirection:'row',alignItems:'center',justifyContent:'center',width:'100%',marginBottom:8}}>
+  <Text style={[styles.resultHeader,{textAlign:'center',flex:0}]}>Résultat</Text>
+  <TouchableOpacity onPress={()=>Alert.alert('Explications du calcul',
+    `Comment ce débit est‑il calculé ?
+1. On estime la puissance P du feu (en MW) par :
+P = S(m²) x H(m) x P_vol(MW/m³) x (%volume en feu /100)
+où P_vol vaut 1 MW/m³ pour le bois, 2 MW/m³ pour un stockage mixte, 2,7 MW/m³ pour du plastique.
+
+2. On déduit le débit d’eau Q (en L/min) nécessaire pour absorber cette puissance, en tenant compte du rendement des lances :
+Q = P x 42,5 (pour 50 % de rendement : 1 L/min → 0,023 MW absorbé donc 42,5 L/min absorbent 1 MW)
+Q = P x 106 (pour 20 % de rendement : 1 L/min → 0,009 MW donc 106 L/min absorbent 1 MW)
+
+3. Pour obtenir Q en m³/h, on multiplie par 0,06 :
+Q(m³/h) = Q(L/min) x 0,06
+Si Q dépasse 12 000 L/min (720 m³/h), la limite réglementaire ou opérationnelle est atteinte.`)}>
+    <View style={{backgroundColor:'#d1d5db',borderRadius:12,paddingHorizontal:6,paddingVertical:2,marginLeft:8,justifyContent:'center',alignItems:'center',minWidth:24,minHeight:24,marginTop:-6}}>
+  <Text style={{fontStyle:'italic',color:'#D32F2F',fontSize:17,fontWeight:'bold',textAlign:'center'}}>i</Text>
+</View>
   </TouchableOpacity>
-  <TouchableOpacity
-    style={{
-      backgroundColor: '#D32F2F',
-      borderRadius: 18,
-      paddingVertical: 8,
-      paddingHorizontal: 22,
-    }}
-    onPress={handleCalculate}
-  >
-    <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Calculer</Text>
-  </TouchableOpacity>
-</View>{result&&(<View style={styles.resultBox}><Text style={styles.resultText}>{result}</Text></View>)}</View>)}
+</View>
+<Text style={styles.resultLine}><Text style={styles.resultLabel}>Puissance max estimée :</Text> {result} MW</Text>
+{qRequis && (
+  <>
+    <Text style={styles.resultLine}><Text style={styles.resultLabel}>Débit requis :</Text> {qRequis} L/min ({(parseFloat(qRequis)*0.06).toFixed(2)} m³/h)</Text>
+    {calcDetails && (
+      <Text style={styles.resultDetail}>{calcDetails}</Text>
+    )}
+    {(parseFloat(qRequis) > 12000 || (parseFloat(qRequis)/60) > 720) && (
+      <View style={styles.warningBox}>
+        <Text style={styles.warningText}>⚠️ Dépasse la limite réglementaire ou opérationnelle (12 000 L/min ou 720 m³/h)</Text>
+      </View>
+    )}
+  </>
+)}
+                      </View>
+                    )}
+                  </View>
+                </View>
+              )}
             </View>
           )}
 
           {/* Surface */}
-          {mode==='surface'&&(<View><Text style={[styles.label,{color:'#111'}]}>Surface (m²)</Text><TextInput style={styles.input} value={surface} onChangeText={setSurface} keyboardType="numeric"/><Text style={[styles.label,{color:'#111'}]}>Hauteur (m)</Text><TextInput style={styles.input} value={hauteur} onChangeText={setHauteur} keyboardType="numeric"/><View style={{flexDirection: 'row', justifyContent: 'center', marginTop: 16, gap: 10}}>
-  <TouchableOpacity
-    style={{
-      borderWidth: 2,
-      borderColor: '#D32F2F',
-      backgroundColor: '#fff',
-      borderRadius: 18,
-      paddingVertical: 8,
-      paddingHorizontal: 22,
-      marginRight: 4,
-    }}
-    onPress={handleReset}
-  >
-    <Text style={{color: '#D32F2F', fontWeight: 'bold', fontSize: 16}}>Réinitialiser</Text>
-  </TouchableOpacity>
-  <TouchableOpacity
-    style={{
-      backgroundColor: '#D32F2F',
-      borderRadius: 18,
-      paddingVertical: 8,
-      paddingHorizontal: 22,
-    }}
-    onPress={handleCalculate}
-  >
-    <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Calculer</Text>
-  </TouchableOpacity>
-</View>{result&&(<View style={styles.resultBox}><Text style={styles.resultText}>{result}</Text></View>)}</View>)}
+          {mode==='surface'&&(<View><Text style={[styles.label,{color:'#111'}]}>Surface (m²)</Text><TextInput style={styles.input} value={surface} onChangeText={setSurface} keyboardType="numeric"/><Text style={[styles.label,{color:'#111'}]}>Hauteur (m)</Text><TextInput style={styles.input} value={hauteur} onChangeText={setHauteur} keyboardType="numeric"/><View style={{alignItems: 'center', marginTop: 16}}>
+                    <View style={{flexDirection: 'row', justifyContent: 'center', gap: 10}}>
+                      <TouchableOpacity
+                        style={{
+                          borderWidth: 2,
+                          borderColor: '#D32F2F',
+                          backgroundColor: '#fff',
+                          borderRadius: 18,
+                          paddingVertical: 8,
+                          paddingHorizontal: 22,
+                        }}
+                        onPress={handleReset}
+                      >
+                        <Text style={{color: '#D32F2F', fontWeight: 'bold', fontSize: 16}}>Réinitialiser</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#D32F2F',
+                          borderRadius: 18,
+                          paddingVertical: 8,
+                          paddingHorizontal: 22,
+                        }}
+                        onPress={handleCalculate}
+                      >
+                        <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Calculer</Text>
+                      </TouchableOpacity>
+                    </View>
+                    {result&&(<View style={styles.resultBlock}><Text style={styles.resultText}>{result}</Text></View>)}
+                  </View></View>)}
 
           {/* FHLI */}
           {mode==='fhli' && (
@@ -361,13 +527,13 @@ export default function GrandFeuxCalculator() {
                     <Text style={styles.buttonText}>Calculer mousse</Text>
                   </TouchableOpacity>
                   {fhliFoamDebit && (
-                    <View style={styles.resultBox}>
+                    <View style={styles.resultBlock}>
                       <Text style={styles.resultTitle}>Débit instantané</Text>
                       <Text style={styles.resultText}>{fhliFoamDebit} L/min</Text>
                     </View>
                   )}
                   {besoinEmulseurTotal && (
-                    <View style={styles.resultBox}>
+                    <View style={styles.resultBlock}>
                       <Text style={styles.resultTitle}>Besoin total émulseur</Text>
                       <Text style={styles.resultText}>{besoinEmulseurTotal} m³</Text>
                     </View>
@@ -393,5 +559,6 @@ export default function GrandFeuxCalculator() {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </>
   );
 }

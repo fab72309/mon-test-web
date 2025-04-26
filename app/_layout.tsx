@@ -3,6 +3,7 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { Stack } from 'expo-router';
 import 'react-native-reanimated';
 
 import { ThemeProviderCustom, useThemeContext } from '../context/ThemeContext';

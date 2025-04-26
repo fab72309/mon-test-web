@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
     elevation: 3,
     alignSelf: 'center',
   },
-  container: { flex: 1, justifyContent: 'flex-start', alignItems: 'center', backgroundColor: '#fff', padding: 20 },
+  
   headerBox: { 
     flexDirection: 'row', 
     alignItems: 'center', 

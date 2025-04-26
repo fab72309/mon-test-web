@@ -26,13 +26,13 @@ export function Header({ title, iconName, iconColor = '#333', iconSize = 28, ico
   return (
     <View style={[styles.container, style]}>
       {iconName && (
-        iconFamily === 'MaterialIcons' ? (
-          <MaterialIcons name={iconName as React.ComponentProps<typeof MaterialIcons>["name"]} size={iconSize} color={iconColor} style={styles.icon as import('react-native').TextStyle} />
-        ) : iconFamily === 'Ionicons' ? (
-          <Ionicons name={iconName as React.ComponentProps<typeof Ionicons>["name"]} size={iconSize} color={iconColor} style={styles.icon as import('react-native').TextStyle} />
-        ) : iconFamily === 'FontAwesome' ? (
-          <FontAwesome name={iconName as React.ComponentProps<typeof FontAwesome>["name"]} size={iconSize} color={iconColor} style={styles.icon as import('react-native').TextStyle} />
-        ) : null
+        <IconComponent
+          // @ts-ignore: TypeScript ne peut pas typer dynamiquement toutes les familles d'icônes
+          name={iconName as any}
+          size={iconSize}
+          color={iconColor}
+          style={styles.icon}
+        />
       )}
       <ThemedText type="title" style={[styles.title, { color: titleColor }]}>{title}</ThemedText>
     </View>
