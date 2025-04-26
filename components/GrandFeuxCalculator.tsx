@@ -54,9 +54,10 @@ function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?: boolean }) {
   const [tauxApplication, setTauxApplication] = useState(6); // valeur par défaut 6 L/min/m²
   const [showResultPropagation, setShowResultPropagation] = useState(false);
   const [showResultOffensive, setShowResultOffensive] = useState(false);
-  const [result, setResult] = useState<string|null>(null);
-  const [qRequis, setQRequis] = useState<string|null>(null);
-  const [calcDetails, setCalcDetails] = useState<string|null>(null);
+  const [resultPropagation, setResultPropagation] = useState<string|null>(null);
+  const [calcDetailsPropagation, setCalcDetailsPropagation] = useState<string|null>(null);
+  const [resultOffensive, setResultOffensive] = useState<string|null>(null);
+  const [calcDetailsOffensive, setCalcDetailsOffensive] = useState<string|null>(null);
   const [fhliTab, setFhliTab] = useState<'foam'|'structure'>('foam');
   const [fhliFoamSurface, setFhliFoamSurface] = useState('');
   const [fhliFoamRateType, setFhliFoamRateType] = useState<'Hydrocarbures'|'Liquides polaires'|'Taux du POI'>('Hydrocarbures');
@@ -74,49 +75,46 @@ function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?: boolean }) {
   const handleCalculate = () => {
     if (strategie === 'propagation') setShowResultPropagation(true);
     if (strategie === 'offensive') setShowResultOffensive(true);
-    let res = '';
-    // reset previous flow calculations
-    setQRequis(null);
-    setCalcDetails(null);
+
     if (mode === 'combustible') {
       if (strategie === 'propagation') {
-        // Correction : Débit = Surface verticale à protéger (m2) x Taux d'application
+        // Débit = Surface verticale à protéger (m2) x Taux d'application
         const surfVert = parseFloat(surfaceVertical);
         const taux = parseFloat(String(tauxApplication));
         if (isNaN(surfVert) || isNaN(taux)) return;
         const debit = surfVert * taux;
-        res = debit.toFixed(2);
-        setQRequis(res);
-        setCalcDetails(`${surfVert} m² × ${taux} L/min/m² = ${res} L/min`);
+        const res = debit.toFixed(2);
+        setResultPropagation(res);
+        setCalcDetailsPropagation(`${surfVert} m² × ${taux} L/min/m² = ${res} L/min`);
+        setResultOffensive(null);
+        setCalcDetailsOffensive(null);
       } else if (strategie === 'offensive') {
         const surf = parseFloat(surface);
         const haut = parseFloat(hauteur);
         if (isNaN(surf)||isNaN(haut)) return;
-        // Pmax = Surface x Hauteur x Puissance par m3 de combustible x (volume en feu / 100)
         const pmax = surf * haut * combustible * (fraction/100);
-        // Q (L/min) = Pmax x 42,5 [pour 50% de rendement], Q = Pmax x 106 [pour 20%]
         let multiplier = rendement === 0.5 ? 42.5 : 106;
         const qLmin = pmax * multiplier;
         const qLminStr = qLmin.toFixed(0);
-        const qm3h = qLmin / 16.67; // 1 m3/h = 16.67 L/min
+        const qm3h = qLmin / 16.67;
         const qm3hStr = qm3h.toFixed(2);
-        setResult(`${qLminStr} L/min (${qm3hStr} m³/h)`);
-        setQRequis(qLminStr);
-        setCalcDetails(`Pmax = ${surf} m² × ${haut} m × ${combustible} MW/m³ × (${fraction}/100) = ${pmax.toFixed(2)} MW\nDébit requis : ${pmax.toFixed(2)} MW × ${multiplier} L/min/MW = ${qLminStr} L/min\nSoit ${qm3hStr} m³/h`);
+        setResultOffensive(`${qLminStr} L/min (${qm3hStr} m³/h)`);
+        setCalcDetailsOffensive(`Pmax = ${surf} m² × ${haut} m × ${combustible} MW/m³ × (${fraction}/100) = ${pmax.toFixed(2)} MW\nDébit requis : ${pmax.toFixed(2)} MW × ${multiplier} L/min/MW = ${qLminStr} L/min\nSoit ${qm3hStr} m³/h`);
+        setResultPropagation(null);
+        setCalcDetailsPropagation(null);
       }
     } else if (mode === 'surface') {
-      const surf = parseFloat(surface);
-      const haut = parseFloat(hauteur);
-      if (isNaN(surf)||isNaN(haut)) return;
-      res = (surf * haut).toFixed(2);
+      // à adapter si besoin
+      setResultPropagation(null);
+      setCalcDetailsPropagation(null);
+      setResultOffensive(null);
+      setCalcDetailsOffensive(null);
     } else {
-      // autres modes : clear
-      setQRequis(null);
-      setCalcDetails(null);
-    };
-    console.log('GrandFeuxCalculator.handleCalculate:', { surface, hauteur, fraction, combustible, result: res });
-    console.log('DEBUG GrandFeuxCalculator.handleCalculate', {res, qRequis, calcDetails});
-    // setResult(res); // supprimé pour ne pas écraser le résultat calculé
+      setResultPropagation(null);
+      setCalcDetailsPropagation(null);
+      setResultOffensive(null);
+      setCalcDetailsOffensive(null);
+    }
   };
   const getTauxReflexe = () => {
     if (fhliFoamRateType === 'Hydrocarbures') return 10;
@@ -310,15 +308,12 @@ function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?: boolean }) {
                   <View style={{alignItems:'center', marginTop:14}}>
                     <PropagationButtons onReset={handleReset} onCalculate={handleCalculate} />
                     {/* Résultat sous les boutons */}
-                    {result && (
+                    {resultPropagation && (
                       <View style={styles.resultBlock}>
                         <Text style={styles.resultTitle}>Résultat</Text>
-                        <Text style={styles.resultText}>{result}</Text>
-                        {qRequis && (
-                          <Text style={styles.resultText}>Débit requis : {qRequis} L/min</Text>
-                        )}
-                        {calcDetails && (
-                          <Text style={styles.resultText}>{calcDetails}</Text>
+                        <Text style={styles.resultText}>{resultPropagation}</Text>
+                        {calcDetailsPropagation && (
+                          <Text style={styles.resultText}>{calcDetailsPropagation}</Text>
                         )}
                       </View>
                     )}
@@ -422,18 +417,15 @@ function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?: boolean }) {
                       </TouchableOpacity>
                     </View>
                     {/* Résultat sous les boutons */}
-                    {result && (
-                      <View style={styles.resultBlock}>
-                        <Text style={styles.resultTitle}>Résultat</Text>
-                        <Text style={styles.resultText}>{result}</Text>
-                        {qRequis && (
-                          <Text style={styles.resultText}>Débit requis : {qRequis} L/min</Text>
-                        )}
-                        {calcDetails && (
-                          <Text style={styles.resultText}>{calcDetails}</Text>
-                        )}
-                      </View>
-                    )}
+                    {resultOffensive && (
+                       <View style={styles.resultBlock}>
+                         <Text style={styles.resultTitle}>Résultat</Text>
+                         <Text style={styles.resultText}>{resultOffensive}</Text>
+                         {calcDetailsOffensive && (
+                           <Text style={styles.resultText}>{calcDetailsOffensive}</Text>
+                         )}
+                       </View>
+                     )}
                   </View>
                 </View>
               )}
