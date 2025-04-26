@@ -208,13 +208,8 @@ export default function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?:
 
   return (
     <>
-      <View style={{padding: 10, backgroundColor: '#ffe', borderBottomWidth: 1, borderColor: '#ccc'}}>
-        <Text style={{color: '#D32F2F', fontWeight: 'bold'}}>DEBUG Bloc résultat</Text>
-        <Text>result = {String(result)}</Text>
-        <Text>qRequis = {String(qRequis)}</Text>
-        <Text>calcDetails = {String(calcDetails)}</Text>
-      </View>
       <KeyboardAvoidingView behavior={Platform.OS==='ios'?'padding':undefined} style={{flex:1}}>
+
 
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
