@@ -21,6 +21,7 @@ export default function TabLayout() {
     <PertesDeChargeTableProvider>
       <MemoSegmentsProvider>
         <Tabs.Navigator
+          initialRouteName="Accueil"
           screenOptions={{
             tabBarActiveTintColor: '#D32F2F',
             headerShown: false,

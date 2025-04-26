@@ -38,9 +38,10 @@ function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?: boolean }) {
     setCombustible(2);
     setRendement(0.2);
     setSurfaceVertical('');
-    setResult(null);
-    setQRequis(null);
-    setCalcDetails(null);
+    setResultPropagation(null);
+    setCalcDetailsPropagation(null);
+    setResultOffensive(null);
+    setCalcDetailsOffensive(null);
   }
   // États
   const [mode, setMode] = useState<'combustible'|'surface'|'fhli'>('combustible');
