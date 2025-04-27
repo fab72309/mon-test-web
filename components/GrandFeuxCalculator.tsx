@@ -31,6 +31,7 @@ const FHLI_STRUCT_OPTIONS = [
 
 function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?: boolean }) {
   const [showInfoPopup, setShowInfoPopup] = useState(false);
+  const [showInfoPopupPropagation, setShowInfoPopupPropagation] = useState(false);
   // Fonction de réinitialisation
   const handleReset = () => {
     setSurface('');
@@ -312,14 +313,37 @@ const [surfaceApprocheSurface, setSurfaceApprocheSurface] = useState(''); // Pou
       <PropagationButtons onReset={handleReset} onCalculate={handleCalculate} />
       {/* Résultat sous les boutons */}
       {resultPropagation && (
-        <View style={styles.resultBlock}>
-          <Text style={styles.resultTitle}>Résultat</Text>
-          <Text style={styles.resultText}>{resultPropagation} L/min</Text>
-          {calcDetailsPropagation && (
-            <Text style={styles.resultText}>{calcDetailsPropagation}</Text>
-          )}
-        </View>
-      )}
+  <View style={styles.resultBlock}>
+    <View style={{flexDirection:'row', alignItems:'center', justifyContent:'center', marginBottom:10}}>
+      <Text style={{
+        color: Colors.light.primary,
+        fontWeight: 'bold',
+        fontSize: 20,
+        textAlign: 'center',
+      }}>Résultat</Text>
+      <TouchableOpacity
+        onPress={() => setShowInfoPopupPropagation(true)}
+        style={{marginLeft: 8, backgroundColor:'#f1f1f1', borderRadius: 12, paddingHorizontal:6, paddingVertical:2, borderWidth:1, borderColor:'#ccc'}}
+        accessibilityLabel="Informations sur le calcul propagation"
+      >
+        <Text style={{fontStyle:'italic', color:'#444', fontSize:15, fontWeight:'bold'}}>i</Text>
+      </TouchableOpacity>
+    </View>
+    {/* Affichage du débit requis en L/min et m³/h */}
+    {(() => {
+      const debitLmin = parseFloat(resultPropagation);
+      const debitM3h = debitLmin / 16.67;
+      return (
+        <Text style={styles.resultText}>Débit requis : {debitLmin.toFixed(0)} L/min ({debitM3h.toFixed(2)} m³/h)</Text>
+      );
+    })()}
+    <InfoPopup
+      visible={showInfoPopupPropagation}
+      onClose={() => setShowInfoPopupPropagation(false)}
+      customText={`Calcul du débit total\u202F:\nQ = Surface à protéger (m²) x Taux d'application (L/min/m²).\nEx.\u202F120\u202Fm² ×\u202F6\u202FL/min/m²\u202F=\u202F720\u202FL/min (43,2\u202Fm³/h).\nSélectionnez un taux adapté à votre situation opérationnelle\u202F:\n\u2022\u202F1–3\u202FL/min/m² pour des risques faibles ou peu exposé au rayonnement.\n\u2022\u202F10–20\u202FL/min/m² pour des parois très exposées ou proches de liquides inflammables.\n\nObjectif\nGagner du temps\u202Fpour\u202F:\n\u2022\u202FStabiliser la façade / le mur coupe‑feu,\n\u2022\u202FPrévenir la propagation vers d’autres cellules ou bâtiments,\n\u2022\u202FAttendre le renfort ou l’arrivée de moyens d’attaque offensifs.`}
+    />
+  </View>
+)}
     </View>
   </View>
 )}
