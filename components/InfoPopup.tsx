@@ -2,7 +2,7 @@ import React from 'react';
 import { Platform } from 'react-native';
 import { Modal, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
-export default function InfoPopup({ visible, onClose, strategy = 'offensive' }: { visible: boolean; onClose: () => void; strategy?: 'offensive' | 'propagation' }) {
+export default function InfoPopup({ visible, onClose, strategy = 'offensive', customText }: { visible: boolean; onClose: () => void; strategy?: 'offensive' | 'propagation'; customText?: string }) {
   return (
     <Modal
       visible={visible}
@@ -12,7 +12,12 @@ export default function InfoPopup({ visible, onClose, strategy = 'offensive' }: 
     >
       <View style={styles.overlay}>
         <View style={styles.popup}>
-          {strategy === 'propagation' ? (
+          {customText ? (
+            <>
+              <Text style={styles.title}>Comment ce débit est-il calculé ?</Text>
+              <Text style={styles.text}>{customText}</Text>
+            </>
+          ) : strategy === 'propagation' ? (
             <>
               <Text style={styles.title}>Comment ce débit est-il calculé ?</Text>
               <Text style={styles.text}>
