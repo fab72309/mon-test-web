@@ -331,6 +331,7 @@ const [surfaceApprocheSurface, setSurfaceApprocheSurface] = useState(''); // Pou
     </TouchableOpacity>
   </View>
   {/* Affichage du débit requis en L/min et m³/h */}
+  {/* Calcul du débit requis en dehors du JSX */}
   {(() => {
     const debitLmin = parseFloat(resultPropagation);
     const debitM3h = debitLmin / 16.67;
@@ -341,11 +342,19 @@ const [surfaceApprocheSurface, setSurfaceApprocheSurface] = useState(''); // Pou
   <InfoPopup
     visible={showInfoPopupPropagation}
     onClose={() => setShowInfoPopupPropagation(false)}
-    customText={`• Calcul du débit total :\nQ = Surface verticale à protéger (m²) x Taux d'application (L/min/m²) .\nEx. 120 m² × 6 L/min/m² = 720 L/min (43,2 m³/h).\nSélectionnez un taux adapté à votre situation opérationnelle.\n  • 1–3 L/min/m² pour des risques faibles ou peu exposés au rayonnement.\n  • 10–20 L/min/m² pour des parois très exposées ou proches de liquides inflammables.\n\n• Objectif\nGagner du temps pour :\n  1. Protéger une façade / un mur coupe‑feu,\n  2. Empêcher la propagation vers d’autres cellules ou bâtiments,\n  3. Attendre les renforts ou l’arrivée de moyens d’attaque grande puissance.`}
+    customText={`• Calcul du débit total :
+Q = Surface verticale à protéger (m²) x Taux d'application (L/min/m²).
+Ex. 120 m² × 6 L/min/m² = 720 L/min (43,2 m³/h).
+Sélectionnez un taux adapté à votre situation opérationnelle.
+  • 1–3 L/min/m² pour des risques faibles ou peu exposés au rayonnement.
+  • 10–20 L/min/m² pour des parois très exposées ou proches de liquides inflammables.
+
+• Objectif
+Gagner du temps pour :
+  1. Protéger une façade / un mur coupe‑feu,
+  2. Empêcher la propagation vers d’autres cellules ou bâtiments,
+  3. Attendre les renforts ou l’arrivée de moyens d’attaque grande puissance.`}
   />
-      onClose={() => setShowInfoPopupPropagation(false)}
-      customText={`Calcul du débit total\u202F:\nQ = Surface à protéger (m²) x Taux d'application (L/min/m²).\nEx.\u202F120\u202Fm² ×\u202F6\u202FL/min/m²\u202F=\u202F720\u202FL/min (43,2\u202Fm³/h).\nSélectionnez un taux adapté à votre situation opérationnelle\u202F:\n\u2022\u202F1–3\u202FL/min/m² pour des risques faibles ou peu exposé au rayonnement.\n\u2022\u202F10–20\u202FL/min/m² pour des parois très exposées ou proches de liquides inflammables.\n\nObjectif\nGagner du temps\u202Fpour\u202F:\n\u2022\u202FStabiliser la façade / le mur coupe‑feu,\n\u2022\u202FPrévenir la propagation vers d’autres cellules ou bâtiments,\n\u2022\u202FAttendre le renfort ou l’arrivée de moyens d’attaque offensifs.`}
-    />
   </View>
 )}
     </View>
