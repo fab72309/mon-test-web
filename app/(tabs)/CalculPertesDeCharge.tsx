@@ -11,7 +11,7 @@ import { useMemoSegments } from '../../context/MemoSegmentsContext';
 import { useNavigation } from '@react-navigation/native';
 import { useThemeContext } from '../../context/ThemeContext';
 
-export default function CalculPertesDeCharge() {
+export default function CalculPertesDeCharge(props: { key?: string }) {
   const { theme } = useThemeContext();
   const palette = Colors[theme];
   const styles = getStyles(palette);

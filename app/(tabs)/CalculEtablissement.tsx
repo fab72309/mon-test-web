@@ -124,7 +124,7 @@ const getStyles = (palette: typeof Colors.light) => StyleSheet.create({
   },
 });
 
-export default function CalculEtablissement() {
+export default function CalculEtablissement(props: { key?: string }) {
   const { theme } = useThemeContext();
   const palette = Colors[theme];
   const styles = getStyles(palette);

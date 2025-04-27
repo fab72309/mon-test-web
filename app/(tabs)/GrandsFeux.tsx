@@ -17,7 +17,7 @@ export default function GrandsFeux() {
           <Text style={{color: isDark ? '#FF7043' : '#D32F2F', fontSize: 23, fontWeight: 'bold', marginVertical: 0, textAlign: 'left', letterSpacing: 0.2}}>Grands feux</Text>
         </View>
       </View>
-      <GrandFeuxCalculator hideTitle />
+      <GrandFeuxCalculator key="grands-feux" hideTitle />
     </SafeAreaView>
   );
 }
