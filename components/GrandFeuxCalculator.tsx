@@ -32,6 +32,8 @@ const FHLI_STRUCT_OPTIONS = [
 function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?: boolean }) {
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [showInfoPopupPropagation, setShowInfoPopupPropagation] = useState(false);
+  const [showInfoPopupSurface, setShowInfoPopupSurface] = useState(false); // Pour l'approche Surface
+  const [resultSurface, setResultSurface] = useState<string|null>(null); // Pour l'approche Surface
   // Fonction de réinitialisation
   const handleReset = () => {
     setSurface('');
@@ -49,7 +51,7 @@ function GrandFeuxCalculator({ hideTitle = false }: { hideTitle?: boolean }) {
   const [mode, setMode] = useState<'combustible'|'surface'|'fhli'>('combustible');
   const [strategie, setStrategie] = useState<'offensive'|'propagation'>('offensive');
   const [surface, setSurface] = useState(''); // Pour l'approche Puissance
-const [surfaceApprocheSurface, setSurfaceApprocheSurface] = useState(''); // Pour l'approche Surface
+  const [surfaceApprocheSurface, setSurfaceApprocheSurface] = useState(''); // Pour l'approche Surface
   const [hauteur, setHauteur] = useState('');
   const [fraction, setFraction] = useState(0);
   const [combustible, setCombustible] = useState(2);
@@ -79,6 +81,23 @@ const [surfaceApprocheSurface, setSurfaceApprocheSurface] = useState(''); // Pou
   const handleCalculate = () => {
     if (strategie === 'propagation') setShowResultPropagation(true);
     if (strategie === 'offensive') setShowResultOffensive(true);
+
+    if (mode === 'surface') {
+      // Bloc Résultat pour approche Surface
+      const surf = parseFloat(surfaceApprocheSurface);
+      const taux = parseFloat(String(tauxApplication));
+      if (isNaN(surf) || isNaN(taux)) {
+        setResultSurface(null);
+        return;
+      }
+      const debit = surf * taux;
+      setResultSurface(debit.toFixed(2));
+      setResultPropagation(null);
+      setResultOffensive(null);
+      setCalcDetailsPropagation(null);
+      setCalcDetailsOffensive(null);
+      return;
+    }
 
     if (mode === 'combustible') {
       if (strategie === 'propagation') {
@@ -496,6 +515,43 @@ Gagner du temps pour :
         </>
       );
     })()}
+  </View>
+)}
+{/* Bloc Résultat pour l'approche Surface */}
+{mode === 'surface' && resultSurface && (
+  <View style={styles.resultBlock}>
+    <View style={{flexDirection:'row', alignItems:'center', justifyContent:'center', marginBottom:10}}>
+      <Text style={{
+        color: '#D32F2F',
+        fontWeight: 'bold',
+        fontSize: 22,
+        textAlign: 'center',
+        flexShrink: 0
+      }}>Résultat</Text>
+      <TouchableOpacity
+        onPress={() => setShowInfoPopupSurface(true)}
+        style={{marginLeft: 8, backgroundColor:'#f1f1f1', borderRadius: 12, paddingHorizontal:6, paddingVertical:2, borderWidth:1, borderColor:'#ccc', alignSelf:'center'}}
+        accessibilityLabel="Informations sur le calcul surface"
+      >
+        <Text style={{fontStyle:'italic', color:'#D32F2F', fontSize:17, fontWeight:'bold'}}>i</Text>
+      </TouchableOpacity>
+    </View>
+    {(() => {
+      const debitLmin = parseFloat(resultSurface ?? "0");
+      const debitM3h = debitLmin / 16.67;
+      return (
+        <Text style={[styles.resultText, {fontWeight:'bold', fontSize:17}]}>Débit requis : {debitLmin.toFixed(0)} L/min ({debitM3h.toFixed(2)} m³/h)</Text>
+      );
+    })()}
+    <InfoPopup
+      visible={showInfoPopupSurface}
+      onClose={() => setShowInfoPopupSurface(false)}
+      customText={` Comment est calculé le débit ?
+Le débit total (Q) en L/min est obtenu par :
+Q = Surface en feu (m²) x Taux d'application (L/min/m²) .
+Ex. Pour 500 m² à 3 L/min/m² → 500×3=1\,500 L/min (1,50 m³/h).
+OC pour les entrepôts non sprinklés (risque important). Ajustez-le taux d'application selon le type de combustible et la doctrine locale .`}
+    />
   </View>
 )}
 {resultOffensive && !(mode === 'combustible' && strategie === 'offensive') && (
